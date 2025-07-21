@@ -1,0 +1,6 @@
+[submodule "moe"]
+	path = moe
+	url = https://github.com/matglima/MoE_4_CyberSec/
+[submodule "app/moe"]
+	path = app/moe
+	url = https://github.com/matglima/MoE_4_CyberSec/

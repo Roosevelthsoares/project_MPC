@@ -1,0 +1,35 @@
+
+
+
+EXECUÇÃO
+
+1. Construção da Imagem
+
+docker build -t cicflowmeter:watcher .
+
+
+2. Captura de um Exemplo PCAP
+
+ping 127.0.0.1 &
+sudo tcpdump -i lo -c 100 -w pcaps/teste.pcap
+
+
+3.  Execução do Container
+
+docker run --rm -it \
+  -e CONVERT_LINKTYPE=1 \
+  -v "$(pwd)/pcaps":/pcaps \
+  -v "$(pwd)/flows":/flows \
+  cicflowmeter:watcher
+
+
+
+
+
+
+
+
+RabbitMQ
+
+docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management                                                                  ✔
+

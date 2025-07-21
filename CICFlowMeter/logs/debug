@@ -1,0 +1,6 @@
+2025-07-12 23:45:11 INFO  cic.cs.unb.ca.ifm.Cmd    The pcap file or folder does not exist! -> -f
+2025-07-12 23:47:50 INFO  cic.cs.unb.ca.ifm.Cmd    The pcap file or folder does not exist! -> -f
+2025-07-12 23:51:04 INFO  cic.cs.unb.ca.ifm.Cmd    You select: ./pcaps/teste.pcap
+2025-07-12 23:51:04 INFO  cic.cs.unb.ca.ifm.Cmd    Out folder: ./flows
+2025-07-12 23:51:05 INFO  cic.cs.unb.ca.ifm.Cmd    CICFlowMeter received 1 pcap file
+2025-07-12 23:51:05 DEBUG cic.cs.unb.ca.jnetpcap.PacketReader    Read All packets on ./pcaps/teste.pcap

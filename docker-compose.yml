@@ -1,0 +1,33 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # UI web
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  cicflowmeter:
+    build: ./CICFlowMeter
+    depends_on:
+      - rabbitmq    
+    volumes:
+      - ./CICFlowMeter/pcaps:/pcaps
+      - ./CICFlowMeter/flows:/flows
+    environment:
+      - PCAPS_DIR=/pcaps
+      - FLOWS_DIR=/flows
+      - DELAY=5
+      - CONVERT_LINKTYPE=1
+
+  oraculo:
+    build: ./Oraculo
+    depends_on:
+      - cicflowmeter
+    ports:
+      - "8000:8000"
+
+
+
+ 

@@ -1,0 +1,21 @@
+# Ambientes virtuais
+venv/
+.env
+.python-version
+
+# VSCode
+.vscode/
+
+# Arquivos de cache Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Arquivos de dados e logs
+*.csv
+*.pcap
+*.parquet
+*.log
+
+# Outros
+.DS_Store

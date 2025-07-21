@@ -1,0 +1,14 @@
+{
+    "type": "block",
+    "interface": "lan",
+    "ipprotocol": "inet",
+    "protocol": "any",
+    "src": "",
+    "srcport": "any",
+    "dst": "any",
+    "dstport": "any",
+    "descr": "",
+    "gateway": "",
+    "log": "true",
+    "top": "true"
+}

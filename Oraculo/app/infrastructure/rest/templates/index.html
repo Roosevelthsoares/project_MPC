@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <title>Oráculo</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</head>
+<body>
+    <!-- Sticky header -->
+    <header class="header-outer">
+        <div class="header-inner responsive-wrapper">
+            <div class="header-logo">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" style="height: 60px;" />
+            </div>
+            <nav class="header-navigation">
+                <a href="#">Home</a>
+                <a href="http://mpc.eb.mil.br/">Sobre</a>
+                <button>Menu</button>
+            </nav>
+        </div>
+    </header>
+    <ol id="itemList" style="--length: 5" role="list">
+        {% if not packages %}
+        <li style="--i: 5">
+            <h3>Tráfego normal</h3>
+            <p>Nenhuma tráfego malicioso detectado.</p>
+        </li>
+        {% endif %}
+        {% for package in packages %}
+        <!-- Se houver algum IP bloqueado no banco de dados -->
+        {% endfor %}
+    </ol>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchAndAppendItems();
+            setInterval(fetchAndAppendItems, 5000);
+        });
+    </script>
+</body>
+</html>
