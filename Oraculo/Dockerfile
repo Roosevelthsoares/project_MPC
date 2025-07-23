@@ -19,7 +19,7 @@ COPY requirements.txt ./
 # Usar `--no-cache-dir` para evitar que o pip deixe arquivos temporários ocupando espaço
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-COPY app /app
+COPY ./app /app
 
 EXPOSE 8000
 

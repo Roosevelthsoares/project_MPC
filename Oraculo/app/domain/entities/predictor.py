@@ -155,7 +155,7 @@ class Predictor:
         Returns:
             tuple: Tuple containing features and labels for calibration.
         """
-        calibration_data_path = Path(self._config.base_path) / "calibrate" / "CICIDS2018_preprocessed_test.parquet"
+        calibration_data_path = Path(self._config.base_path) / "calibrate" / "CICIDS2018_preprocessed_test_reduced.parquet"
 
         if not calibration_data_path.exists():
             raise FileNotFoundError(f"Calibration data file not found: {calibration_data_path}")
@@ -181,9 +181,9 @@ class Predictor:
         else:
             # Stratified sampling: keep 20% of original data stratified by class
             _, X_sample, _, _ = train_test_split(
-                X, y, test_size=0.2, stratify=y, random_state=42
+                X, y, test_size=0.1, stratify=y, random_state=42
             )
-            print(X_sample.shape)
+            print("new reduced calibration data shape:", X_sample.shape)
             scaler = StandardScaler().fit(X_sample)
             joblib.dump(scaler, preprocessor_path)
 
