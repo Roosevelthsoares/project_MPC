@@ -93,61 +93,7 @@ class Predictor:
         self.predictor = MoEPredictor(self._calibrator, {cls: expert for cls, expert in zip(self.classes, self.experts)}, self.classes)
         
         return self
-    
-    
-    # def _import_calibration_data(self) -> tuple:
-    #     """
-    #     Import calibration data from a CSV file.
-
-    #     Returns:
-    #         tuple: Tuple containing features and labels for calibration.
-    #     """
-    #     calibration_data_path = Path(self._config.base_path) / "calibrate" / "CICIDS2018_preprocessed_test.parquet"
-
-    #     if not calibration_data_path.exists():
-    #         raise FileNotFoundError(f"Calibration data file not found: {calibration_data_path}")
         
-    #     processor = DataProcessor(data_path=calibration_data_path)
-    #     processor.load_and_preprocess_data()
-
-    #     # Apply external label mapping from Predictor
-    #     processor.label_dict = self.lbl2id
-    #     processor.y = processor.y.map(self.lbl2id).astype(np.uint8)
-
-    #     # Prepare for scaler persistence
-    #     preprocessor_path = Path(self._config.base_path) / "preprocessor" / "scaler.joblib"
-    #     preprocessor_path.parent.mkdir(parents=True, exist_ok=True)
-
-    #     if preprocessor_path.exists():
-    #         scaler = joblib.load(preprocessor_path)
-    #         del processor
-    #         gc.collect()
-    #     else:
-    #         X, y = processor.X, processor.y
-    #         del processor
-    #         gc.collect()
-
-    #         one_per_class_idx = [y[y == label].index[0] for label in np.unique(y)]
-    #         total_target_size = int(len(X) * 0.2)
-
-    #         remaining_indices = y.index.difference(one_per_class_idx)
-    #         remaining_needed = max(total_target_size - len(one_per_class_idx), 0)
-    #         additional_indices = (
-    #             remaining_indices.to_series()
-    #             .sample(n=remaining_needed, random_state=42)
-    #             .index if remaining_needed > 0 else []
-    #         )
-
-    #         final_indices = one_per_class_idx + list(additional_indices)
-    #         sample = X.loc[final_indices].astype(np.float32)
-
-    #         scaler = StandardScaler().fit(sample)
-    #         joblib.dump(scaler, preprocessor_path)
-
-    #         X_calibrate = scaler.transform(X.astype(np.float32))
-    #         y_calibrate = y.to_numpy()
-    #         return X_calibrate, y_calibrate
-    
     def _import_calibration_data(self) -> tuple:
         """
         Import calibration data from a CSV file.
@@ -155,6 +101,7 @@ class Predictor:
         Returns:
             tuple: Tuple containing features and labels for calibration.
         """
+
         calibration_data_path = Path(self._config.base_path) / "calibrate" / "CICIDS2018_preprocessed_test_reduced.parquet"
 
         if not calibration_data_path.exists():
@@ -163,12 +110,10 @@ class Predictor:
         processor = DataProcessor(data_path=calibration_data_path)
         processor.load_and_preprocess_data()
 
-        # Apply label mapping
         processor.label_dict = self.lbl2id
         processor.y = processor.y.map(self.lbl2id).astype(np.uint8)
 
-        # Set up preprocessor path
-        preprocessor_path = Path(self._config.base_path) / "preprocessor" / "scaler.joblib"
+        preprocessor_path = Path(self._config.base_path) / "preprocessor" / "pipeline.pkl"
         preprocessor_path.parent.mkdir(parents=True, exist_ok=True)
 
         X = processor.X.astype(np.float32)
@@ -179,7 +124,6 @@ class Predictor:
         if preprocessor_path.exists():
             scaler = joblib.load(preprocessor_path)
         else:
-            # Stratified sampling: keep 20% of original data stratified by class
             _, X_sample, _, _ = train_test_split(
                 X, y, test_size=0.1, stratify=y, random_state=42
             )

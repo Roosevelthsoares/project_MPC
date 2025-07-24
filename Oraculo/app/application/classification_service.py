@@ -8,7 +8,7 @@ class ClassificationService:
 
     def __init__(self, predictor: Predictor):
         self.__predictor = predictor
-        preprocessor_path = Path("data/models/preprocessor/scaler.joblib")
+        preprocessor_path = Path("data/models/preprocessor/pipeline.pkl")
         if not preprocessor_path.exists():
             raise RuntimeError("Preprocessor not found. Please build the Predictor first.")
 
