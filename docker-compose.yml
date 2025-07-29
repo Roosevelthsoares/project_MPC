@@ -3,7 +3,7 @@ services:
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
-      - "15672:15672"  # UI web
+      - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -29,32 +29,43 @@ services:
       - logstash
     ports:
       - "8000:8000"
-    deploy:
-      resources:
-        limits:
-          memory: 8g
+    mem_limit: 8g  # replaced unsupported `deploy` block
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.4
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
     ports:
       - "9200:9200"
     volumes:
-      - esdata:/usr/share/elasticsearch/data
+      - esdata_new:/usr/share/elasticsearch/data
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.13.4
+    image: docker.elastic.co/logstash/logstash:9.0.4
+    container_name: logstash
     depends_on:
       - elasticsearch
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
     ports:
-      - "5044:5044"  # Beats input
-      - "9600:9600"  # Monitoring API
+      - "5044:5044"
+      - "9600:9600"
     environment:
       - LS_JAVA_OPTS=-Xms512m -Xmx512m
 
+  kibana:
+    image: docker.elastic.co/kibana/kibana:9.0.4
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
 volumes:
-  esdata:
+  esdata_new:
