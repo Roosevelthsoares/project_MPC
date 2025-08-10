@@ -1,0 +1,28 @@
+%YAML 1.1
+---
+# Use the pcap-file capture method (Suricata will pick it when you pass -r).
+pcap-file:
+  checksum-checks: auto
+  # (capture method options live here; --pcap-file-continuous is a CLI flag)
+
+# Output only what you need; EVE JSON to a single file
+outputs:
+  - eve-log:
+      enabled: yes
+      filetype: regular
+      filename: /var/log/suricata/eve.json
+      # For high-speed parsing, let threads write to their own files:
+      # thread: true   # (creates eve.<id>.json files)
+      types:
+        - flow        # flow summaries
+        - alert       # signature hits (if you enable detection/rules)
+        - stats       # optional, handy for performance
+
+# Optional: disable detection if you only want flow summaries first
+# detection:
+#   enabled: no
+
+# If you plan to use rules, make sure your rules dir is mounted:
+# default-rule-path: /etc/suricata/rules
+# rule-files:
+#   - suricata.rules

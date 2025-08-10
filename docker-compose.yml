@@ -8,19 +8,6 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
-  cicflowmeter:
-    build: ./CICFlowMeter
-    depends_on:
-      - rabbitmq    
-    volumes:
-      - ./CICFlowMeter/pcaps:/pcaps
-      - ./CICFlowMeter/flows:/flows
-    environment:
-      - PCAPS_DIR=/pcaps
-      - FLOWS_DIR=/flows
-      - DELAY=5
-      - CONVERT_LINKTYPE=1
-
   oraculo:
     build: ./Oraculo
     depends_on:
@@ -42,7 +29,7 @@ services:
     ports:
       - "9200:9200"
     volumes:
-      - esdata_new:/usr/share/elasticsearch/data
+      - esdata_new_comparative:/usr/share/elasticsearch/data
 
   logstash:
     image: docker.elastic.co/logstash/logstash:9.0.4
@@ -67,5 +54,47 @@ services:
     depends_on:
       - elasticsearch
 
+  suricata:
+    image: jasonish/suricata:latest
+    depends_on: [logstash]
+    volumes:
+      - pcapstore:/shared
+      - ./suricata/suricata.yaml:/etc/suricata/suricata.yaml:ro
+      - ./suricata/logs:/var/log/suricata
+    command: >
+      -c /etc/suricata/suricata.yaml
+      --pcap-file-continuous
+      -r /shared/suri
+
+  cicflowmeter:
+    build: ./CICFlowMeter
+    depends_on: [rabbitmq]
+    environment:
+      - PCAPS_DIR=/shared/cic
+      - FLOWS_DIR=/flows
+      - DELAY=5
+      - CONVERT_LINKTYPE=1
+    volumes:
+      - pcapstore:/shared
+      - ./CICFlowMeter/flows:/flows
+
+  pcap-feeder:
+    build: ./pcap-feeder
+    depends_on:
+      - suricata
+      - cicflowmeter
+    # host networking only if you want live capture; for offline CICIDS2018 replay set CAPTURE=0
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      - CAP_IF=eth0          # set your real interface for live capture
+      - CAPTURE=1            # 0 = disable capture (still fans-in from /shared/incoming)
+    volumes:
+      - pcapstore:/shared    # single volume so hard-links work
+
+
 volumes:
-  esdata_new:
+  pcapstore:
+  esdata_new_comparative:
