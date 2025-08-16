@@ -12,10 +12,10 @@ else:
 
 class ColoredFormatter(logging.Formatter):
     FORMATS = {
-        logging.INFO: "\033[92m%(asctime)s - %(name)s - %(levelname)s - %(message)s\033[0m",      # GREEN
-        logging.WARNING: "\033[93m%(asctime)s - %(name)s - %(levelname)s - %(message)s\033[0m",   # YELLOW
-        logging.ERROR: "\033[91m%(asctime)s - %(name)s - %(levelname)s - %(message)s\033[0m",     # RED
-        logging.DEBUG: "\033[33m%(asctime)s - %(name)s - %(levelname)s - %(message)s\033[0m",     # BROWN
+        logging.INFO: "\033[92m[%(levelname)s] - %(asctime)s - %(name)s - %(message)s\033[0m",      # GREEN
+        logging.WARNING: "\033[93m[%(levelname)s] - %(asctime)s - %(name)s - %(message)s\033[0m",   # YELLOW
+        logging.ERROR: "\033[91m[%(levelname)s] - %(asctime)s - %(name)s - %(message)s\033[0m",     # RED
+        logging.DEBUG: "\033[33m[%(levelname)s] - %(asctime)s - %(name)s - %(message)s\033[0m",     # BROWN
     }
 
     def format(self, record):

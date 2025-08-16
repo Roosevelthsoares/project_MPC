@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 import numpy
 import json
@@ -8,6 +9,7 @@ from domain.entities.predictor import Predictor
 class ClassificationService:
 
     def __init__(self, predictor: Predictor):
+        self.__gating_strategy = os.getenv("GATING_METHOD", 'soft')
         self.__predictor = predictor
         preprocessor_path = Path("data/models/preprocessor/pipeline.pkl")
         if not preprocessor_path.exists():
@@ -22,32 +24,16 @@ class ClassificationService:
     def pre_processing(self, message: dict) -> Tuple[str, numpy.ndarray]:
         try:
             data = json.loads(message)
-            # temp = list(data.values())
-            # return temp[0], self.__scaler.transform(numpy.array([temp[1:]]))
-
-
-            ### -------------- MODIFICADO ----------------------------------- ###    
-            # extraia o IP  
             ip = data["IP Src"]
-
-            # pegue só o vetor de floats que já montamos lá no producer  
             features = data["features"]
-
-            # crie a matriz 2D (1, n_features) corretamente  
             X = numpy.array([features], dtype=float)
-
-            # e devolva ip + dados escalados  
             return ip, self.__scaler.transform(X)
-            ### ------------------------------------------------------------- ###             
-            
-        
         except Exception:
             raise
 
 
 
     def classification(self, input_data: numpy.ndarray) -> list[Tuple[str, float]]:
-        # adicionar MLFlow logger aqui
-        return self.__predictor.predict(input_data)
+        return self.__predictor.predict(input_data, strategy=self.__gating_strategy)
 
     

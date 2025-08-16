@@ -17,5 +17,8 @@ class PackageController:
         return packages
     
     def post_model(self):
+        # CHECK IF IT'S POSSIBLE TO LOG THE MODEL AS KERAS WRAPPER OR IF IT'S NECESSARY TO USE THE KERAS LOGGER
+        # WE ALSO NEED TO MODIFY THE BEHAVIOR OF PREDICTOR SO WE CAN CHANGE MODELS ON LIVE, LIKELY INJECTING A PREDICTOR
+        # REFERENCE HERE
         pass
         

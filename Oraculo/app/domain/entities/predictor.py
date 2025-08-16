@@ -2,6 +2,7 @@ import gc
 import logging
 import os
 from pathlib import Path
+from domain.entities.loggers.metrics import Timer
 import joblib
 import numpy as np
 import pandas as pd
@@ -55,7 +56,7 @@ class ModelConfig(BaseModel):
         return values
 
 class Predictor:
-    def __init__(self, config: ModelConfig=ModelConfig(base_path='data/models')):
+    def __init__(self, config: ModelConfig|str=ModelConfig(base_path='data/models')):
         self._config = config  # Store the validated config
         self._built = False  # Track if models have been loaded
         self.id2lbl = {}
@@ -69,37 +70,45 @@ class Predictor:
         return self._config
 
     def build(self):
-        """Load models only if they haven't been built yet."""
         if self._built:
             raise RuntimeError("Predictor is already built.")
-
+        self._built = True
+        
+        if isinstance(self._config, ModelConfig):
+            self._build_from_dir()
+        else:
+            self._load_mlflow_model()
+            
+    def _load_mlflow_model(self):
+        pass
+    
+    def _build_label_maps(self):
         self.id2lbl = {i: attack for i, attack in enumerate(self._config.experts_models_path.keys())}
         self.lbl2id = {attack: i for i, attack in enumerate(self._config.experts_models_path.keys())}
         self.classes = list(self.lbl2id.keys())
-
-        # Load models
+        
+    def _load_from_dir(self):
         self.experts = [load_model(path) for path in self._config.experts_models_path.values()]
         self.gate_model = load_model(self._config.gate_model_path)
 
-        self._built = True
+    def _build_from_dir(self):
+        """Load models only if they haven't been built yet."""
+        self._build_label_maps()
+
+        self._load_from_dir()
         
         X_calibrate, y_calibrate = self._import_calibration_data()
         
         self._calibrator = GateCalibrator(self.gate_model, self.classes, method=os.getenv("CALIBRATION_METHOD", None)).calibrate(X_calibrate, y_calibrate)
+        
         del X_calibrate, y_calibrate
         gc.collect()        
+        
         self.predictor = MoEPredictor(self._calibrator, {cls: expert for cls, expert in zip(self.classes, self.experts)}, self.classes)
         
         return self
-        
-    def _import_calibration_data(self) -> tuple:
-        """
-        Import calibration data from a CSV file.
-
-        Returns:
-            tuple: Tuple containing features and labels for calibration.
-        """
-
+    
+    def _load_data_from_dir(self) -> tuple[np.ndarray, np.ndarray]:
         calibration_data_path = Path(self._config.base_path) / "calibrate" / "CICIDS2018_preprocessed_test_reduced.parquet"
 
         if not calibration_data_path.exists():
@@ -110,14 +119,17 @@ class Predictor:
 
         processor.label_dict = self.lbl2id
         processor.y = processor.y.map(self.lbl2id).astype(np.uint8)
-
-        preprocessor_path = Path(self._config.base_path) / "preprocessor" / "pipeline.pkl"
-        preprocessor_path.parent.mkdir(parents=True, exist_ok=True)
-
+        
         X = processor.X.astype(np.float32)
         y = processor.y
         del processor
         gc.collect()
+        return X, y
+    
+    def _load_preprocessor_from_dir(self, X: np.ndarray, y: np.ndarray):
+        preprocessor_path = Path(self._config.base_path) / "preprocessor" / "pipeline.pkl"
+        preprocessor_path.parent.mkdir(parents=True, exist_ok=True)
+
 
         if preprocessor_path.exists():
             scaler = joblib.load(preprocessor_path)
@@ -128,6 +140,20 @@ class Predictor:
             logging.debug("new reduced calibration data shape:", X_sample.shape)
             scaler = StandardScaler().fit(X_sample)
             joblib.dump(scaler, preprocessor_path)
+        
+        return scaler
+        
+        
+        
+    def _import_calibration_data(self) -> tuple:
+        """
+        Import calibration data from a CSV file.
+
+        Returns:
+            tuple: Tuple containing features and labels for calibration.
+        """
+        X, y = self._load_data_from_dir()
+        scaler = self._load_preprocessor_from_dir(X, y)
 
         X_calibrate = scaler.transform(X)
         y_calibrate = y.to_numpy()
@@ -151,5 +177,10 @@ class Predictor:
         if not self._built:
             raise RuntimeError("Model is not built. Call `build()` first.")
 
-        return self.predictor.predict(X_input, strategy, threshold, batch_size, **kwargs)
+        with Timer() as timer:
+            preds = self.predictor.predict(X_input, strategy, threshold, batch_size, **kwargs)
+        
+        # adicionar MLFlow logger aqui
+        
+        return preds
 
