@@ -7,11 +7,8 @@ import pandas as pd
 from tensorflow.keras.models import load_model
 from pydantic import BaseModel, Field, model_validator
 from typing import Dict, List, Tuple
-# from moe.predictors import MoEPredictor
-# from moe.calibration import GateCalibrator
 from moe.src.moe.predictors import MoEPredictor
 from moe.src.moe.calibration import GateCalibrator
-# from data_preprocessing import DataProcessor
 from moe.src.data_preprocessing import DataProcessor
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
@@ -87,7 +84,7 @@ class Predictor:
         
         X_calibrate, y_calibrate = self._import_calibration_data()
         
-        self._calibrator = GateCalibrator(self.gate_model, self.classes).calibrate(X_calibrate, y_calibrate)
+        self._calibrator = GateCalibrator(self.gate_model, self.classes, method=os.getenv("CALIBRATION_METHOD", None)).calibrate(X_calibrate, y_calibrate)
         del X_calibrate, y_calibrate
         gc.collect()        
         self.predictor = MoEPredictor(self._calibrator, {cls: expert for cls, expert in zip(self.classes, self.experts)}, self.classes)

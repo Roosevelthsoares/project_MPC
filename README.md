@@ -1,6 +1,15 @@
 # Project MPC
 
+## Nota
+
+```sh
+docker compose --env-file <path> --profile <dev> up
+```
+
+observar se convem trocar pra podman
+
 ## Visão Geral
+
 
 Este repositório contém a integração de um pipeline ponta-a-ponta para análise de tráfego de rede e predição de anomalias utilizando:
 

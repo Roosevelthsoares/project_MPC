@@ -47,6 +47,7 @@ class ClassificationService:
 
 
     def classification(self, input_data: numpy.ndarray) -> list[Tuple[str, float]]:
+        # adicionar MLFlow logger aqui
         return self.__predictor.predict(input_data)
 
     

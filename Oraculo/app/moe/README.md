@@ -6,7 +6,7 @@ This repository implements an advanced **Mixture of Experts (MoE)** framework fo
 
 ## Updated Repository Structure
 
-```
+```sh
 my_project/
 ├── README.md                  # Project documentation
 ├── requirements.txt           # Python dependencies
@@ -147,6 +147,7 @@ model.compile(
 ## Advanced Features
 
 ### Dynamic Threshold Adjustment
+
 ```python
 from src.moe.finetuning import DynamicThresholdOptimizer
 
@@ -155,6 +156,7 @@ best_threshold = optimizer.find_optimal_threshold()
 ```
 
 ### Calibration Comparison
+
 ```python
 from src.moe.calibration import CalibrationComparator
 
@@ -162,7 +164,6 @@ comparator = CalibrationComparator(gate_model, X_cal, y_cal)
 comparator.compare_methods(['isotonic', 'sigmoid'])
 ```
 
----
-
 ## License
+
 MIT License - See [LICENSE](LICENSE) for details.
