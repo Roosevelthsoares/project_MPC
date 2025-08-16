@@ -1,4 +1,5 @@
 import gc
+import logging
 import os
 from pathlib import Path
 import joblib
@@ -124,7 +125,7 @@ class Predictor:
             _, X_sample, _, _ = train_test_split(
                 X, y, test_size=0.1, stratify=y, random_state=42
             )
-            print("new reduced calibration data shape:", X_sample.shape)
+            logging.debug("new reduced calibration data shape:", X_sample.shape)
             scaler = StandardScaler().fit(X_sample)
             joblib.dump(scaler, preprocessor_path)
 

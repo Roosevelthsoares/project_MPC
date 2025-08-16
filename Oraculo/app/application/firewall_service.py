@@ -1,4 +1,5 @@
 import json
+import logging
 
 from interfaces.rest_client import RESTClient
 
@@ -16,9 +17,9 @@ class FirewallService:
             return rule 
 
         except Exception as e:
-            print(f'Error accessing rule file: {e}')
+            logging.error(f'Error accessing rule file: {e}')
 
     def block_source_ip(self, ip):
-        print(f'Creating blocking rule for source IP: {ip}')
+        logging.info(f'Creating blocking rule for source IP: {ip}')
         rule = self.__create_blocking_rule(ip)
         self.__pfsense_client.post(data=rule)

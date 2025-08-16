@@ -1,3 +1,4 @@
+import logging
 import requests
 
 from interfaces.rest_client import RESTClient
@@ -15,19 +16,19 @@ class pfSenseClient(RESTClient):
 
         # Handle HTTP errors
         except requests.exceptions.HTTPError as errh:
-            print ("HTTP Error:", errh)
+            logging.error("HTTP Error:", errh)
 
         # Handle connection errors
         except requests.exceptions.ConnectionError as errc:
-            print ("Error Connecting:", errc)
+            logging.error("Error Connecting:", errc)
 
         # Handle timeouts
         except requests.exceptions.Timeout as errt:
-            print ("Timeout Error:", errt)
+            logging.error("Timeout Error:", errt)
 
         # Handle other errors
         except requests.exceptions.RequestException as err:
-            print ("Error:", err)
+            logging.error("Error:", err)
 
     def get(self, path='', params=None):
         url = f'{self.__base_url}/{path}'
@@ -38,7 +39,7 @@ class pfSenseClient(RESTClient):
             return response
 
         except requests.RequestException as e:
-            print(f"An error occurred during GET request: \n{str(e)}")
+            logging.error(f"An error occurred during GET request: \n{str(e)}")
 
     def post(self, path='', data=None):
         url = f'{self.__base_url}/{path}'
@@ -49,4 +50,4 @@ class pfSenseClient(RESTClient):
             return response
 
         except requests.RequestException as e:
-            print(f"An error occurred during POST request: \n{str(e)}")
+            logging.error(f"An error occurred during POST request: \n{str(e)}")

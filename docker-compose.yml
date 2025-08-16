@@ -40,6 +40,43 @@ services:
       --backend-store-uri ${MLFLOW_BACKEND_URI}
       --artifacts-destination ${MLFLOW_ARTIFACT_ROOT}
 
+  cicflowmeter:
+    build: ./CICFlowMeter
+    depends_on: [rabbitmq]
+    environment:
+      PCAPS_DIR: ${PCAPS_DIR:-/shared/cic}
+      FLOWS_DIR: ${FLOWS_DIR:-/flows}
+      DELAY: ${DELAY:-5}
+      CONVERT_LINKTYPE: ${CONVERT_LINKTYPE:-1}
+    volumes:
+      - pcapstore:/shared
+      - ./CICFlowMeter/flows:/flows
+    healthcheck:
+      test: ["CMD", "bash", "-c", "test -d ${FLOWS_DIR:-/flows}"]
+      interval: 20s
+      timeout: 3s
+      retries: 15
+
+  pcap-feeder:
+    build: ./pcap-feeder
+    depends_on:
+      - suricata
+      - cicflowmeter
+    # host networking only if you want live capture; for offline CICIDS2018 replay set CAPTURE=0
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      CAP_IF: ${CAP_IF:-eth0} # set your real interface for live capture
+      CAPTURE: ${CAPTURE:-1}  # 0 = disable capture (still fans-in from /shared/incoming)
+      MIRROR_SURICATA: ${MIRROR_ORACULO:-false}
+      MIRROR_ORACULO: ${MIRROR_ORACULO:-true}
+    volumes:
+      - pcapstore:/shared    # single volume so hard-links work
+
+  # ---------- DEV ONLY CONTAINERS ----------
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.4
     container_name: elasticsearch
@@ -90,13 +127,16 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
       - elasticsearch
-
     profiles:
       - dev
 
   suricata:
     image: jasonish/suricata:latest
     depends_on: [logstash]
+    env_file:
+      - .env.${COMPOSE_PROFILE:-dev}
+    environment:
+      SURICATA_CONFIG_PATH: ${SURICATA_CONFIG_PATH:-./suriacata/suricata.yml}
     volumes:
       - pcapstore:/shared
       - ./suricata/suricata.yaml:/etc/suricata/suricata.yaml:ro
@@ -108,34 +148,21 @@ services:
     profiles:
       - dev
 
-  cicflowmeter:
-    build: ./CICFlowMeter
-    depends_on: [rabbitmq]
+  grafana:
+    image: grafana/grafana:latest
+    profiles: ["dev"]
+    env_file:
+      - .env.${COMPOSE_PROFILE:-dev}
     environment:
-      - PCAPS_DIR=/shared/cic
-      - FLOWS_DIR=/flows
-      - DELAY=5
-      - CONVERT_LINKTYPE=1
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    ports:
+      - "3000:3000"
     volumes:
-      - pcapstore:/shared
-      - ./CICFlowMeter/flows:/flows
-
-  pcap-feeder:
-    build: ./pcap-feeder
+      - grafana_data:/var/lib/grafana
     depends_on:
-      - suricata
-      - cicflowmeter
-    # host networking only if you want live capture; for offline CICIDS2018 replay set CAPTURE=0
-    network_mode: host
-    cap_add:
-      - NET_ADMIN
-      - NET_RAW
-    environment:
-      - CAP_IF=eth0          # set your real interface for live capture
-      - CAPTURE=1            # 0 = disable capture (still fans-in from /shared/incoming)
-    volumes:
-      - pcapstore:/shared    # single volume so hard-links work
-
+      - elasticsearch
+    # Optional: auto-provision ES datasource by mounting ./grafana/provisioning
 
 volumes:
   pcapstore:

@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 from application.classification_service import ClassificationService
 from application.firewall_service import FirewallService
@@ -25,7 +26,7 @@ class MessengerService:
                 self.__package_service.create_package(ip, max_score_label, max_score_confidence)
 
         except Exception as e:
-            print(f"Error processing message: {str(e)}")
+            logging.error(f"Error processing message: {str(e)}")
 
     def consume_message(self, queue_name):
         self.__messenger.receive_message(queue_name, self.__handle_message)

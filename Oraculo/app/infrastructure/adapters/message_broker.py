@@ -1,3 +1,4 @@
+import logging
 import pika
 import time
 
@@ -18,7 +19,7 @@ class MessageBroker(Messenger):
         
     def connect(self):
         # Connect to RMQ 
-        print(f'Connecting to {self.__server}')
+        logging.info(f'Connecting to {self.__server}')
         retries = 0
         while retries < self.__max_retries:
             try:
@@ -30,12 +31,12 @@ class MessageBroker(Messenger):
 
             # Do not recover on channel errors
             except pika.exceptions.AMQPChannelError as err:
-                print('Channel error: {}, stopping...'.format(err))
+                logging.error('Channel error: {}, stopping...'.format(err))
                 break
 
             # Recover on connection errors
             except pika.exceptions.AMQPConnectionError:
-                print("Connection was closed, retrying...")
+                logging.warning("Connection was closed, retrying...")
                 retries += 1
                 time.sleep(self.__retry_delay)
 
@@ -46,10 +47,10 @@ class MessageBroker(Messenger):
             self.connect()
             self.__channel.queue_declare(queue=queue_name, durable=True) 
             self.__channel.basic_publish(exchange='', routing_key=queue_name, body=message)
-            print(f" [x] Sent '{message[:100]}...'")
+            logging.debug(f"Sent '{message[:100]}...'")
 
         except pika.exceptions.AMQPError as e:
-            print(f"Error publishing message: {str(e)}")
+            logging.error(f"Error publishing message: {str(e)}")
 
         finally:
             self.close_connection()
@@ -59,7 +60,7 @@ class MessageBroker(Messenger):
             self.connect()
             self.__channel.queue_declare(queue=queue_name, durable=True)
             self.__channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-            print(' [*] Waiting for messages. To exit press CTRL+C')
+            logging.info('Waiting for messages. To exit press CTRL+C')
             self.__channel.start_consuming()
 
         except KeyboardInterrupt:
@@ -67,7 +68,7 @@ class MessageBroker(Messenger):
                 self.__channel.stop_consuming()
             
         except pika.exceptions.AMQPError as e:
-            print(f"Error receiving message: {str(e)}")
+            logging.error(f"Error receiving message: {str(e)}")
 
         finally:
             self.close_connection()
@@ -75,5 +76,5 @@ class MessageBroker(Messenger):
     def close_connection(self):
         if self.__connection and self.__connection.is_open:
             self.__connection.close()
-            print("Connection closed.")
+            logging.info("Connection closed.")
         

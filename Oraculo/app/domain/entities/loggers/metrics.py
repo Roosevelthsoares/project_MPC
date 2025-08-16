@@ -1,7 +1,22 @@
+import time
 import mlflow
 from mlflow.tracking import MlflowClient
 
 from interfaces.extensions.loggers.metrics import MetricLoggingExtension
+
+
+class Timer:
+    def __init__(self):
+        pass
+    
+    def __enter__(self):
+        self.start_time = time.perf_counter_ns()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.end_time = time.perf_counter_ns()
+        self.elapsed_time = self.end_time - self.start_time
+        return False
 
 
 class MLFlowLogger(MetricLoggingExtension):

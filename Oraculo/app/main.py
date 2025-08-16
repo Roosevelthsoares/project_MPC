@@ -1,3 +1,4 @@
+import logging
 import threading
 import signal
 import sys
@@ -12,7 +13,7 @@ from application.firewall_service import FirewallService
 from application.package_service import PackageService
 from application.classification_service import ClassificationService
 from config import URL_FIREWALL, FIREWALL_CLIENT_ID, FIREWALL_TOKEN_ID
-
+from domain.entities.loggers.terminal import apply_colored_formatter
 
 
 def start_flask_app():
@@ -23,7 +24,7 @@ def start_flask_app():
     return flask_app, flask_thread
 
 def stop_application():
-    print("[INFO] Stopping application...") # INSERIDO  
+    logging.warning("Stopping application...") # INSERIDO  
     if flask_app: # INSERIDO
         flask_app.stop()
     sys.exit(0)
@@ -45,6 +46,9 @@ def main():
     
 if __name__ == '__main__':
     try:
+        # Color and format the logs
+        apply_colored_formatter()
+        
         # Create flask instance and a thread running the web server
         flask_app, flask_thread = start_flask_app()
 
@@ -58,8 +62,6 @@ if __name__ == '__main__':
         stop_application()
 
     except Exception as e:
-        print(str(e))
-        raise e 
-        # print(f"[ERROR] {e}") #INSERIDO
-        # stop_application() #INSERIDO
+        logging.error(str(e.with_traceback()))
+        stop_application()
         

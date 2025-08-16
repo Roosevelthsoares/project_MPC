@@ -1,3 +1,4 @@
+import logging
 import socket
 import json
 from pathlib import Path
@@ -27,9 +28,9 @@ class PersistentLogstashProducer(PackageRepository):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 sock.connect((self.logstash_host, self.logstash_port))
                 sock.sendall(message.encode('utf-8'))
-            print(f"[x] Logged and pushed to Logstash: {message}")
+            logging.debug(f"Logged and pushed to Logstash: {message}")
         except Exception as e:
-            print(f"[!] Failed to send to Logstash at {self.logstash_host}:{self.logstash_port} — {e}")
+            logging.error(f"Failed to send to Logstash at {self.logstash_host}:{self.logstash_port} — {e}")
 
     def close(self):
         pass
