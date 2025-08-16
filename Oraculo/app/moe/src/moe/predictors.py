@@ -1,7 +1,7 @@
 import numpy as np
 from tqdm import tqdm
 import tensorflow as tf
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from .gating_strategies import GatingStrategy
 import numpy as np
 from tqdm import tqdm
@@ -52,9 +52,10 @@ class MoEPredictor:
         
         return predictions
 
-    def _batch_soft_predict(self, X: np.ndarray, gate_probs: np.ndarray, threshold: float) -> List[str]:
+    def _batch_soft_predict(self, X: np.ndarray, gate_probs: np.ndarray, threshold: float) -> List[Tuple[str, float]]:
         """
         Perform batch predictions using the soft strategy.
+        Returns a list of (predicted_label, confidence) tuples.
         """
         expert_inputs = {cls_name: [] for cls_name in self.classes}
         input_indices = {cls_name: [] for cls_name in self.classes}
@@ -72,31 +73,44 @@ class MoEPredictor:
             if inputs:
                 preds = self.expert_models[cls_name].predict(np.array(inputs), verbose=0)
                 for i, pred in zip(input_indices[cls_name], preds):
-                    aggregated_scores[i][cls_name] = pred[0]
+                    aggregated_scores[i][cls_name] = pred[0]  # raw score
         
-        # Normalize scores and select the class with the highest score
+        # Normalize scores and pick class with highest score + confidence
         predictions = []
         for idx, scores in enumerate(aggregated_scores):
-            total_weight = sum(scores.values())
-            if total_weight > 0:
-                scores = {cls: val / total_weight for cls, val in scores.items()}
-            try:
-                # Use the current instance's gate_probs to pick a fallback class
-                predictions.append(max(scores, key=scores.get) if scores else self.classes[np.argmax(gate_probs[idx])])
-            except IndexError:
-                # Handle edge cases with fallback
-                print(f"Warning: Index {idx} is out of bounds for gate_probs or classes. Using default fallback.")
-                predictions.append(self.classes[0])  # Default to the first class or a defined fallback
+            # total_weight = sum(scores.values())
+            # if total_weight > 0:
+            #     scores = {cls: val / total_weight for cls, val in scores.items()}
+            scores = self._normalize_scores(scores)
+            if scores:
+                best_class = max(scores, key=scores.get)
+                confidence = scores[best_class]
+                predictions.append((best_class, confidence))
+            else:
+                fallback_class = self.classes[np.argmax(gate_probs[idx])]
+                predictions.append((fallback_class, 0.0))
         return predictions
 
 
-    def _hard_predict(self, x: np.ndarray, expert_name: str) -> str:
-        expert_pred = self.expert_models[expert_name].predict(x.reshape(1, -1), verbose=0)[0][0]
-        return expert_name if expert_pred >= 0.5 else 'Unknown'
+    def _hard_predict(self, x: np.ndarray, expert_name: str, threshold: float = 0.5) -> Tuple[str, float]:
+        """
+        Predict with a single (hard-gated) expert.
+        Returns (predicted_label, confidence).
+        Assumes the expert outputs a probability for `expert_name` (sigmoid).
+        """
+        p = float(self.expert_models[expert_name].predict(x.reshape(1, -1), verbose=0)[0][0])
+        if p >= threshold:
+            # Positive class: confidence is the expert's probability
+            return [expert_name, p]
+        else:
+            # Negative class ("Unknown"): confidence is 1 - p (model's confidence it's NOT the expert)
+            return ['Unknown', 1.0 - p]
     
-    def _batch_top_k_predict(self, X: np.ndarray, gate_probs: np.ndarray, k: int) -> List[str]:
+    def _batch_top_k_predict(self, X: np.ndarray, gate_probs: np.ndarray, k: int) -> List[Tuple[str, float]]:
         """
         Perform batch predictions using the top-k strategy.
+        Returns a list of (predicted_label, confidence), where confidence
+        is the normalized score among the experts queried for that sample.
         """
         expert_inputs = {cls_name: [] for cls_name in self.classes}
         input_indices = {cls_name: [] for cls_name in self.classes}
@@ -114,11 +128,23 @@ class MoEPredictor:
             if inputs:
                 preds = self.expert_models[cls_name].predict(np.array(inputs), verbose=0)
                 for i, pred in zip(input_indices[cls_name], preds):
-                    aggregated_scores[i][cls_name] = pred[0]
+                    aggregated_scores[i][cls_name] = float(pred[0])  # raw score from this expert
         
-        # Select the class with the highest score
-        predictions = []
+        # Pick best class and include confidence
+        predictions: List[Tuple[str, float]] = []
         for scores in aggregated_scores:
-            predictions.append(max(scores, key=scores.get) if scores else 'Unknown')
+            # scores = self._normalize_scores(scores)
+            if scores:
+                total = sum(scores.values())
+                norm = {c: (v / total) for c, v in scores.items()} if total > 0 else scores
+                best = max(norm, key=norm.get)
+                predictions.append((best, float(norm[best])))
+            else:
+                predictions.append(('Unknown', 0.0))
         return predictions
 
+    def _normalize_scores(self, scores: dict) -> dict:
+        total = sum(scores.values())
+        if total > 0:
+            return {cls: val / total for cls, val in scores.items()}
+        return scores

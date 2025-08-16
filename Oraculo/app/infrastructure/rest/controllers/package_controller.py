@@ -15,4 +15,7 @@ class PackageController:
     def get_packages(self):
         packages = self.__package_service.get_packages()
         return packages
+    
+    def post_model(self):
+        pass
         

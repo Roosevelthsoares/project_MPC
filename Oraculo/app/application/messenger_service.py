@@ -1,3 +1,4 @@
+from typing import Any
 from application.classification_service import ClassificationService
 from application.firewall_service import FirewallService
 from application.package_service import PackageService
@@ -11,16 +12,17 @@ class MessengerService:
         self.__firewall_service = firewall_service
         self.__package_service = package_service
 
-    def __handle_message(self, ch, method, properties, body):
+    def __handle_message(self, ch, method, properties, body: bytes):
         try:
     
-            message = body.decode('utf-8')
-            print(f"[DEBUG] Mensagem recebida: {message}")  # <---- adicione isto
+            message: dict[str, Any] = body.decode('utf-8')
             ip, input_data = self.__classification_service.pre_processing(message)
             prediction = self.__classification_service.classification(input_data)
-            if(prediction != ["Benign"]): 
+            max_score_label = prediction[0][0]
+            max_score_confidence = prediction[0][1]
+            if(max_score_label != "Benign"): 
                 # self.__firewall_service.block_source_ip(ip)
-                self.__package_service.create_package(ip, prediction[0])
+                self.__package_service.create_package(ip, max_score_label, max_score_confidence)
 
         except Exception as e:
             print(f"Error processing message: {str(e)}")

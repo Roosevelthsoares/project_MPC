@@ -3,7 +3,7 @@ import signal
 import sys
 
 from infrastructure.rest.app import WebServer
-from infrastructure.database.in_memory_database import db 
+from infrastructure.database.logstash_producer import db 
 from domain.entities.predictor import Predictor
 from infrastructure.adapters.message_broker import MessageBroker
 from infrastructure.adapters.pfsense_client import pfSenseClient
@@ -11,7 +11,7 @@ from application.messenger_service import MessengerService
 from application.firewall_service import FirewallService
 from application.package_service import PackageService
 from application.classification_service import ClassificationService
-from config import URL_FIREWALL, CLIENT_ID, TOKEN_ID
+from config import URL_FIREWALL, FIREWALL_CLIENT_ID, FIREWALL_TOKEN_ID
 
 
 
@@ -32,7 +32,7 @@ def initialize_services():
     predictor = Predictor().build()
 
     message_broker = MessageBroker()
-    pfSense_client = pfSenseClient(URL_FIREWALL, CLIENT_ID, TOKEN_ID)
+    pfSense_client = pfSenseClient(URL_FIREWALL, FIREWALL_CLIENT_ID, FIREWALL_TOKEN_ID)
     classification_service = ClassificationService(predictor)
     firewall_service = FirewallService(pfSense_client)
     package_service = PackageService(db)
@@ -42,7 +42,7 @@ def initialize_services():
 def main():
     messenger_service = initialize_services()
     messenger_service.consume_message('model-queue')
-
+    
 if __name__ == '__main__':
     try:
         # Create flask instance and a thread running the web server

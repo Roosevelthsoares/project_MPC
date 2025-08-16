@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from tensorflow.keras.models import load_model
 from pydantic import BaseModel, Field, model_validator
-from typing import Dict, List
+from typing import Dict, List, Tuple
 # from moe.predictors import MoEPredictor
 # from moe.calibration import GateCalibrator
 from moe.src.moe.predictors import MoEPredictor
@@ -136,7 +136,7 @@ class Predictor:
         return X_calibrate, y_calibrate
     
 
-    def predict(self, X_input: np.ndarray, strategy: str = 'soft', threshold: float = 0.1, batch_size: int = 32, **kwargs) -> List[str]:
+    def predict(self, X_input: np.ndarray, strategy: str = 'soft', threshold: float = 0.1, batch_size: int = 32, **kwargs) -> List[Tuple[str, float]]:
         """
         Predict using the Mixture of Experts (MoE) approach.
 

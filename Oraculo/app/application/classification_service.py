@@ -1,3 +1,4 @@
+from typing import Tuple
 import numpy
 import json
 import joblib
@@ -18,7 +19,7 @@ class ClassificationService:
         try: self.__predictor.build()
         except RuntimeError: pass    
 
-    def pre_processing(self, message):
+    def pre_processing(self, message: dict) -> Tuple[str, numpy.ndarray]:
         try:
             data = json.loads(message)
             # temp = list(data.values())
@@ -45,7 +46,7 @@ class ClassificationService:
 
 
 
-    def classification(self, input_data):
+    def classification(self, input_data: numpy.ndarray) -> list[Tuple[str, float]]:
         return self.__predictor.predict(input_data)
 
     

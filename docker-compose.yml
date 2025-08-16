@@ -11,12 +11,34 @@ services:
   oraculo:
     build: ./Oraculo
     depends_on:
-      - cicflowmeter
-      - elasticsearch
-      - logstash
+      cicflowmeter:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      logstash:
+        condition: service_healthy
     ports:
       - "8000:8000"
-    mem_limit: 8g  # replaced unsupported `deploy` block
+    mem_limit: 8g
+
+  mlflow:
+    build: ./mlflow
+    container_name: mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      # Where to keep runs/artifacts in the container
+      # (bind-mount/volume below makes them persistent)
+      MLFLOW_BACKEND_URI: sqlite:////mlflow/mlflow.db
+      MLFLOW_ARTIFACT_ROOT: /mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri ${MLFLOW_BACKEND_URI}
+      --artifacts-destination ${MLFLOW_ARTIFACT_ROOT}
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:9.0.4
@@ -30,6 +52,13 @@ services:
       - "9200:9200"
     volumes:
       - esdata_new_comparative:/usr/share/elasticsearch/data
+    profiles:
+      - dev
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9200"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
 
   logstash:
     image: docker.elastic.co/logstash/logstash:9.0.4
@@ -43,6 +72,14 @@ services:
       - "9600:9600"
     environment:
       - LS_JAVA_OPTS=-Xms512m -Xmx512m
+    profiles:
+      - dev
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9600/_node/pipelines"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+    
 
   kibana:
     image: docker.elastic.co/kibana/kibana:9.0.4
@@ -53,6 +90,9 @@ services:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
       - elasticsearch
+
+    profiles:
+      - dev
 
   suricata:
     image: jasonish/suricata:latest
@@ -65,6 +105,8 @@ services:
       -c /etc/suricata/suricata.yaml
       --pcap-file-continuous
       -r /shared/suri
+    profiles:
+      - dev
 
   cicflowmeter:
     build: ./CICFlowMeter
