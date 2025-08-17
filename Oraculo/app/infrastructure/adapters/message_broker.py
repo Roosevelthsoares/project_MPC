@@ -1,4 +1,5 @@
 import logging
+import os
 import pika
 import time
 
@@ -6,7 +7,10 @@ from interfaces.messenger import Messenger
 
 class MessageBroker(Messenger):
     
-    def __init__(self, server='rabbitmq', port=5672, user='guest', password='guest', virtual_host='/', max_retries=3, retry_delay=5):
+    def __init__(self, server='rabbitmq', port=5672, user=None, password=None, virtual_host='/', max_retries=3, retry_delay=5):
+        user = user or os.getenv("RABBITMQ_DEFAULT_USER", "guest")
+        password = password or os.getenv("RABBITMQ_DEFAULT_PASSWORD", "guest")
+        
         self.__server = server
         self.__port = port
         self.__user = user

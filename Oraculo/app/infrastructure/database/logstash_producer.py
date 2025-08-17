@@ -1,4 +1,5 @@
 import logging
+import os
 import socket
 import json
 from pathlib import Path
@@ -36,6 +37,10 @@ class PersistentLogstashProducer(PackageRepository):
         pass
 
 
+logstash_url = os.getenv("LOGSTASH_URL", "http://logstash:9600")
 
+splits = logstash_url.rsplit(':')
+port = splits[0]
+host = splits[1][2:]
 
-db = PersistentLogstashProducer()
+db = PersistentLogstashProducer(logstash_host=host, port=int(port))
