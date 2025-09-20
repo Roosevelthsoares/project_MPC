@@ -73,7 +73,7 @@ class Predictor:
         """Read-only config property."""
         return self._config
 
-    def build(self):
+    def build(self) -> 'Predictor':
         if self._built:
             raise RuntimeError("Predictor is already built.")
         self._built = True
@@ -82,6 +82,8 @@ class Predictor:
             self._build_from_dir()
         elif isinstance(self._config, MLFlowModelConfig):
             self._load_mlflow_model()
+        
+        return self
             
     def _load_mlflow_model(self):
         pass
