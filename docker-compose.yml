@@ -86,7 +86,7 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - xpack.license.self_generated.type=basic
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
     ports:
       - "9200:9200"
     volumes:
@@ -139,12 +139,13 @@ services:
       - pcapstore:/shared
       - ${SURICATA_CONFIG_PATH:-./suricata/suricata.yaml}:/etc/suricata/suricata.yaml:ro
       - ./suricata/logs:/var/log/suricata
-    command: >
-      -c /etc/suricata/suricata.yaml
-      --pcap-file-continuous
-      -r /shared/suri
+      - ./suricata/suricata-wrapper.sh:/usr/local/bin/suricata-wrapper.sh:ro
+    command: ["/usr/local/bin/suricata-wrapper.sh"]
     profiles:
       - dev
+    # -c /etc/suricata/suricata.yaml
+    # --pcap-file-continuous
+    # -r /shared/suri/*.pcap
 
   grafana:
     image: grafana/grafana:latest
@@ -165,7 +166,7 @@ services:
   prometheus:
     image: prom/prometheus:v2.53.0
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prom_data:/prometheus
     ports: ["9090:9090"]
     profiles:

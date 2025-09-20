@@ -45,18 +45,26 @@ def main():
     messenger_service.consume_message('model-queue')
     
 if __name__ == '__main__':
-    try:
-        apply_colored_formatter()
+    # try:
+    #     apply_colored_formatter()
         
-        flask_app, flask_thread = start_flask_app()
+    #     flask_app, flask_thread = start_flask_app()
 
-        signal.signal(signal.SIGINT, stop_application)
+    #     signal.signal(signal.SIGINT, stop_application)
 
-        main()
+    #     main()
 
-        stop_application()
+    #     stop_application()
 
-    except Exception as e:
-        logging.error(str(e.with_traceback()))
-        stop_application()
+    # except Exception as e:
+    #     logging.error(str(e))
+    #     stop_application()
         
+
+    flask_app, flask_thread = start_flask_app()
+
+    signal.signal(signal.SIGINT, stop_application)
+
+    main()
+
+    stop_application()

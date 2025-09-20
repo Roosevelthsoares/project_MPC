@@ -39,8 +39,7 @@ class PersistentLogstashProducer(PackageRepository):
 
 logstash_url = os.getenv("LOGSTASH_URL", "http://logstash:9600")
 
-splits = logstash_url.rsplit(':')
-port = splits[0]
-host = splits[1][2:]
-
-db = PersistentLogstashProducer(logstash_host=host, port=int(port))
+splits = logstash_url.split(':')
+port = splits[2]
+host = ''.join(splits[:2])
+db = PersistentLogstashProducer(logstash_host=host, logstash_port=int(port))

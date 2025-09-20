@@ -31,7 +31,7 @@ class ClassificationService:
             return ip, self.__scaler.transform(X)
         except Exception as e:
             logging.error(f"Classification Service could not pre-process message: {message}, with error:")
-            logging.error(e.with_traceback())
+            logging.error(e)
             raise e
 
     def classification(self, input_data: numpy.ndarray) -> list[Tuple[str, float]]:
