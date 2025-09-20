@@ -9,7 +9,6 @@ authors = [
     {name = "Fabricio Asfora",email = "asfora.assuncao@ime.eb.br"},
     {name = "Roosevelth Soares", email = "roosevelth.soares@ime.eb.br"}
 ]
-readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "absl-py (==2.1.0)",

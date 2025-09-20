@@ -2,7 +2,7 @@ import gc
 import logging
 import os
 from pathlib import Path
-from domain.entities.loggers.metrics import Timer
+from domain.entities.loggers.metrics import PrometheusPushLogger, Timer
 import joblib
 import numpy as np
 import pandas as pd
@@ -17,7 +17,7 @@ from sklearn.model_selection import train_test_split
 
 
 
-class ModelConfig(BaseModel):
+class PathModelConfig(BaseModel):
     base_path: str = Field(..., description="Base directory where all models are stored.")
     gate_model_path: str = Field(..., description="Path to the gate model.", exclude=True)
     experts_models_path: Dict[str, str] = Field({}, description="Mapping of attack types to expert model paths.", exclude=True)
@@ -54,18 +54,22 @@ class ModelConfig(BaseModel):
         values["experts_models_path"] = experts_models
 
         return values
+    
+class MLFlowModelConfig(BaseModel):
+    pass
 
 class Predictor:
-    def __init__(self, config: ModelConfig|str=ModelConfig(base_path='data/models')):
+    def __init__(self, config: PathModelConfig|MLFlowModelConfig=PathModelConfig(base_path='data/models')):
         self._config = config  # Store the validated config
         self._built = False  # Track if models have been loaded
         self.id2lbl = {}
         self.lbl2id = {}
         self.experts: List = []
         self.gate_model = None
+        self._logger = PrometheusPushLogger()
 
     @property
-    def config(self) -> ModelConfig:
+    def config(self) -> PathModelConfig:
         """Read-only config property."""
         return self._config
 
@@ -74,9 +78,9 @@ class Predictor:
             raise RuntimeError("Predictor is already built.")
         self._built = True
         
-        if isinstance(self._config, ModelConfig):
+        if isinstance(self._config, PathModelConfig):
             self._build_from_dir()
-        else:
+        elif isinstance(self._config, MLFlowModelConfig):
             self._load_mlflow_model()
             
     def _load_mlflow_model(self):
@@ -91,23 +95,6 @@ class Predictor:
         self.experts = [load_model(path) for path in self._config.experts_models_path.values()]
         self.gate_model = load_model(self._config.gate_model_path)
 
-    def _build_from_dir(self):
-        """Load models only if they haven't been built yet."""
-        self._build_label_maps()
-
-        self._load_from_dir()
-        
-        X_calibrate, y_calibrate = self._import_calibration_data()
-        
-        self._calibrator = GateCalibrator(self.gate_model, self.classes, method=os.getenv("CALIBRATION_METHOD", None)).calibrate(X_calibrate, y_calibrate)
-        
-        del X_calibrate, y_calibrate
-        gc.collect()        
-        
-        self.predictor = MoEPredictor(self._calibrator, {cls: expert for cls, expert in zip(self.classes, self.experts)}, self.classes)
-        
-        return self
-    
     def _load_data_from_dir(self) -> tuple[np.ndarray, np.ndarray]:
         calibration_data_path = Path(self._config.base_path) / "calibrate" / "CICIDS2018_preprocessed_test_reduced.parquet"
 
@@ -142,9 +129,7 @@ class Predictor:
             joblib.dump(scaler, preprocessor_path)
         
         return scaler
-        
-        
-        
+                
     def _import_calibration_data(self) -> tuple:
         """
         Import calibration data from a CSV file.
@@ -159,6 +144,27 @@ class Predictor:
         y_calibrate = y.to_numpy()
         return X_calibrate, y_calibrate
     
+    def _save_on_mlflow(self):
+        pass
+    
+    def _build_from_dir(self):
+        """Load models only if they haven't been built yet."""
+        self._build_label_maps()
+
+        self._load_from_dir()
+        
+        X_calibrate, y_calibrate = self._import_calibration_data()
+        
+        self._calibrator = GateCalibrator(self.gate_model, self.classes, method=os.getenv("CALIBRATION_METHOD", 'isotonic').lower()).calibrate(X_calibrate, y_calibrate)
+        
+        del X_calibrate, y_calibrate
+        gc.collect()        
+        
+        self.predictor = MoEPredictor(self._calibrator, {cls: expert for cls, expert in zip(self.classes, self.experts)}, self.classes)
+        
+        self._save_on_mlflow()
+        
+        return self
 
     def predict(self, X_input: np.ndarray, strategy: str = 'soft', threshold: float = 0.1, batch_size: int = 32, **kwargs) -> List[Tuple[str, float]]:
         """
@@ -180,7 +186,6 @@ class Predictor:
         with Timer() as timer:
             preds = self.predictor.predict(X_input, strategy, threshold, batch_size, **kwargs)
         
-        # adicionar MLFlow logger aqui
-        
+        self._logger.log(input_data=X_input, variant=strategy, prediction=preds, metrics={'threshold': threshold, 'batch_size': batch_size})
         return preds
 

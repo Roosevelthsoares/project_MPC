@@ -24,8 +24,8 @@ def start_flask_app():
     return flask_app, flask_thread
 
 def stop_application():
-    logging.warning("Stopping application...") # INSERIDO  
-    if flask_app: # INSERIDO
+    logging.warning("Stopping application...")  
+    if flask_app:
         flask_app.stop()
     sys.exit(0)
 
@@ -46,19 +46,14 @@ def main():
     
 if __name__ == '__main__':
     try:
-        # Color and format the logs
         apply_colored_formatter()
         
-        # Create flask instance and a thread running the web server
         flask_app, flask_thread = start_flask_app()
 
-        # Register a signal handler for CTRL+C
         signal.signal(signal.SIGINT, stop_application)
 
-        # Run your existing main function (communication with broker) in the main thread
         main()
 
-        # Stop the application when the communication with the broker ends
         stop_application()
 
     except Exception as e:

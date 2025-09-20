@@ -3,6 +3,8 @@ FROM python:3.12.3-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PIP_DEFAULT_TIMEOUT=120
+ENV PIP_RETRIES=10
 
 WORKDIR /app
 
@@ -17,8 +19,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY pyproject.toml ./
 
-# Usar `--no-cache-dir` para evitar que o pip deixe arquivos temporários ocupando espaço
-RUN poetry install
+RUN poetry install --no-ansi --no-interaction --no-root
 
 COPY ./app /app
 

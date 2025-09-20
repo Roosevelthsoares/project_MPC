@@ -13,7 +13,8 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven { url "https://clojars.org/repo" }
-    
+    maven { url "https://jcenter.bintray.com" }
+    maven { url "https://repo1.maven.org/maven2/" }
     flatDir { dirs 'jnetpcap/linux/jnetpcap-1.4.r1425', 'jnetpcap/win/jnetpcap-1.4.r1425'}
 
 }

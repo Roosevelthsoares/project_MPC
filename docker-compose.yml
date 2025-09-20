@@ -105,7 +105,7 @@ services:
     depends_on:
       - elasticsearch
     volumes:
-      - ${LOGSTASH_CONFIG_PATH:-./logstash/pipeline}:/usr/share/logstash/pipeline
+      - ${LOGSTASH_CONFIG_PATH:-./logstash/pipeline}:/usr/share/logstash/pipeline:rw
     ports:
       - "5044:5044"
       - "9600:9600"
@@ -162,6 +162,25 @@ services:
       - elasticsearch
     # Optional: auto-provision ES datasource by mounting ./grafana/provisioning
 
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prom_data:/prometheus
+    ports: ["9090:9090"]
+    profiles:
+      - dev
+
+  pushgateway:
+    image: prom/pushgateway:v1.9.0
+    ports: ["9091:9091"]
+    profiles:
+      - dev
+
 volumes:
   pcapstore:
   esdata_new_comparative:
+  mlflow_data:
+  comparative_data:
+  prom_data:
+  grafana_data:
