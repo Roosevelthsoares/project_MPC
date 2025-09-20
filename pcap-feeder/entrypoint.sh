@@ -1,4 +1,3 @@
-# ./pcap-feeder/entrypoint.sh
 #!/bin/sh
 set -eu
 
