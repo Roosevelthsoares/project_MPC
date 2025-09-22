@@ -86,7 +86,7 @@ services:
       - discovery.type=single-node
       - xpack.security.enabled=false
       - xpack.license.self_generated.type=basic
-      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+      - ES_JAVA_OPTS=-Xms${ELASTICSEARCH_MEMORY_LIMIT:-256m} -Xmx${ELASTICSEARCH_MEMORY_LIMIT:-256m}
     ports:
       - "9200:9200"
     volumes:
@@ -110,7 +110,7 @@ services:
       - "5044:5044"
       - "9600:9600"
     environment:
-      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+      - LS_JAVA_OPTS=-Xms${LOGSTASH_MEMORY_LIMIT:-512m} -Xmx${LOGSTASH_MEMORY_LIMIT:-512m}
     profiles:
       - dev
     healthcheck:
