@@ -139,13 +139,14 @@ services:
       - pcapstore:/shared
       - ${SURICATA_CONFIG_PATH:-./suricata/suricata.yaml}:/etc/suricata/suricata.yaml:ro
       - ./suricata/logs:/var/log/suricata
+      - ./suricata/rules:/etc/suricata/rules     # <--- persistência das regras
       - ./suricata/suricata-wrapper.sh:/usr/local/bin/suricata-wrapper.sh:ro
     command: ["/usr/local/bin/suricata-wrapper.sh"]
+    ports:
+      - "9100:9100"
     profiles:
       - dev
-    # -c /etc/suricata/suricata.yaml
-    # --pcap-file-continuous
-    # -r /shared/suri/*.pcap
+
 
   grafana:
     image: grafana/grafana:latest
@@ -177,6 +178,20 @@ services:
     ports: ["9091:9091"]
     profiles:
       - dev
+
+  telegraf:
+    image: telegraf:1.31
+    container_name: telegraf
+    volumes:
+      - ./suricata/logs:/var/log/suricata:ro
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    ports:
+      - "9273:9273"
+    profiles:
+      - dev
+    depends_on:
+      - suricata
+
 
 volumes:
   pcapstore:

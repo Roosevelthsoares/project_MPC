@@ -1,0 +1,25 @@
+#!/bin/sh
+set -e
+
+echo "[suricata] starting in continuous mode"
+echo "[suricata] watching directory: /shared/suri"
+
+# Garante que o diretório existe
+mkdir -p /shared/suri
+
+# Executa o Suricata em modo contínuo, lendo todos os PCAPs que caírem em /shared/suri
+exec suricata \
+  -c /etc/suricata/suricata.yaml \
+  --pcap-file-continuous \
+  -r /shared/suri
+
+# while true; do
+#   for f in /shared/suri/*.pcap; do
+#     [ -f "$f" ] || continue
+#     echo "[suricata] processing $f"
+#     suricata -c /etc/suricata/suricata.yaml -r "$f"
+#     rm -f "$f"
+#   done
+#   sleep 5
+# done
+

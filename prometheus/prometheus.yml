@@ -1,13 +1,17 @@
 global:
-  scrape_interval: 15s
+  scrape_interval: 5s
 
 scrape_configs:
   # Pull from Pushgateway (the easiest 'push' pattern)
   - job_name: "pushgateway"
     static_configs:
       - targets: ["pushgateway:9091"]
+      
+  - job_name: "telegraf"
+    static_configs:
+      - targets: ["telegraf:9273"]
 
-  # (Optional) Directly scrape your services if they expose /metrics
-  # - job_name: "services"
+  # - job_name: "suricata"
   #   static_configs:
-  #     - targets: ["svc_a:8080", "svc_b:8080"]
+  #     - targets: ["suricata:9100"]
+
