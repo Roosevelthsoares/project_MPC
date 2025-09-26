@@ -1,0 +1,21 @@
+%YAML 1.1
+---
+
+# Apenas configuração mínima para métricas do Prometheus
+outputs:
+  - eve-log:
+      enabled: no
+      type: file
+      filename: /var/log/suricata/eve.json
+  - stats:
+      enabled: yes
+      type: prometheus
+      bind-address: 0.0.0.0:9101
+      interval: 10
+
+app-layer:
+  protocols:
+    http:
+      enabled: yes
+    tls:
+      enabled: yes

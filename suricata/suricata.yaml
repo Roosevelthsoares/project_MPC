@@ -1,28 +1,77 @@
 %YAML 1.1
 ---
-# Use the pcap-file capture method (Suricata will pick it when you pass -r).
-pcap-file:
-  checksum-checks: auto
-  # (capture method options live here; --pcap-file-continuous is a CLI flag)
+stats:
+  enabled: yes
+  interval: 10
 
-# Output only what you need; EVE JSON to a single file
+# Define uma interface prometheus separada para métricas
+# The default logging directory
+default-log-dir: /var/log/suricata
+
 outputs:
   - eve-log:
       enabled: yes
       filetype: regular
-      filename: /var/log/suricata/eve.json
-      # For high-speed parsing, let threads write to their own files:
-      # thread: true   # (creates eve.<id>.json files)
+      filename: eve.json
       types:
-        - flow        # flow summaries
-        - alert       # signature hits (if you enable detection/rules)
-        - stats       # optional, handy for performance
+        - flow
+        - alert
+        - stats
+        - http
+        - dns
+        - tls
+        - ssh
 
-# Optional: disable detection if you only want flow summaries first
+  - fast:
+      enabled: yes
+      filename: fast.log
+
+  - stats:
+      enabled: yes
+      filename: stats.log
+      interval: 10
+
+  - metrics:
+      enabled: yes
+      prometheus:
+        enabled: yes
+        listen: 0.0.0.0:9101
+        mode: listen
+
+# Definição das variáveis usadas pelas regras
+vars:
+  address-groups:
+    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
+    EXTERNAL_NET: "!$HOME_NET"
+    HTTP_SERVERS: "$HOME_NET"
+    SQL_SERVERS: "$HOME_NET"
+    TELNET_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "$HOME_NET"
+    DNS_SERVERS: "$HOME_NET"
+
+  port-groups:
+    HTTP_PORTS: "80,8080,8000,3128,443"
+    SHELLCODE_PORTS: "!80"
+    ORACLE_PORTS: "1521"
+    SSH_PORTS: "22"
+
+
+app-layer:
+  protocols:
+    modbus:
+      enabled: yes
+      detection-enabled: yes
+    # dnp3:
+    #   enabled: yes
+    #   detection-enabled: yes
+
+
+# Se você quiser apenas fluxo sem detecção, pode desabilitar
 # detection:
 #   enabled: no
 
-# If you plan to use rules, make sure your rules dir is mounted:
-# default-rule-path: /etc/suricata/rules
-# rule-files:
-#   - suricata.rules
+# Regras
+default-rule-path: /var/lib/suricata/rules
+rule-files:
+  - suricata.rules
+

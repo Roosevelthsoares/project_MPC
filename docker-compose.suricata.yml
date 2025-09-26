@@ -1,0 +1,58 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.0.4
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.license.self_generated.type=basic
+      - ES_JAVA_OPTS=-Xms256m -Xmx256m
+    ports:
+      - "9200:9200"
+    volumes:
+      - esdata_new_comparative:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9200"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:9.0.4
+    container_name: logstash
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ${LOGSTASH_CONFIG_PATH:-./logstash/pipeline}:/usr/share/logstash/pipeline:rw
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    environment:
+      - LS_JAVA_OPTS=-Xms512m -Xmx512m
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9600/_node/pipelines"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+
+  suricata:
+    build: ./suricata
+    container_name: project_mpc-suricata-1
+    depends_on: [logstash]
+    volumes:
+      - ./pcaps:/shared/suri
+      - ${SURICATA_CONFIG_PATH:-./suricata/suricata.yaml}:/etc/suricata/suricata.yaml:ro
+      - ./suricata/suricata-metrics.yaml:/suricata-metrics.yaml:ro
+      - ./suricata/logs:/var/log/suricata
+      - ./suricata/rules:/etc/suricata/rules
+    ports:
+      - "9101:9101"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9101/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  esdata_new_comparative:

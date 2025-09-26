@@ -19,3 +19,6 @@ __pycache__/
 
 # Outros
 .DS_Store
+
+# Ignorar logs do Suricata
+suricata/logs/
