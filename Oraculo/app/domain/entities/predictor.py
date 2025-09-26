@@ -168,7 +168,7 @@ class Predictor:
         
         return self
 
-    def predict(self, X_input: np.ndarray, strategy: str = 'soft', threshold: float = 0.1, batch_size: int = 32, **kwargs) -> List[Tuple[str, float]]:
+    def predict(self, X_input: np.ndarray, strategy: str = 'soft', id:str|None=None, threshold: float = 0.1, batch_size: int = 32, **kwargs) -> List[Tuple[str, float]]:
         """
         Predict using the Mixture of Experts (MoE) approach.
 
@@ -188,6 +188,7 @@ class Predictor:
         with Timer() as timer:
             preds = self.predictor.predict(X_input, strategy, threshold, batch_size, **kwargs)
         
-        self._logger.log(input_data=X_input, variant=strategy, prediction=preds, metrics={'threshold': threshold, 'batch_size': batch_size})
+        self._logger.log(input_data=X_input, latency=timer.elapsed_time,
+                         variant=strategy, prediction=preds, metrics={'threshold': threshold, 'batch_size': batch_size}, id=id)
         return preds
 

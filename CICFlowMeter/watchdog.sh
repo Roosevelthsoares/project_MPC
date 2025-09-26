@@ -31,18 +31,6 @@ while true; do
       pcap_to_use="$file"
     fi
 
-    # java -Djava.library.path=/app/lib/native \
-    #   -cp "/CICFlowMeter-fat.jar:/app/lib/jnetpcap.jar" \
-    #   cic.cs.unb.ca.ifm.Cmd \
-    #   "$pcap_to_use" \
-    #   "$OUTPUT_DIR"
-
-    # java -Djava.library.path=/app/lib/native \
-    #   -cp "/CICFlowMeter-4.0.jar:/app/lib/jnetpcap.jar" \
-    #   cic.cs.unb.ca.ifm.Cmd \
-    #   "$pcap_to_use" \
-    #   "$OUTPUT_DIR"
-
     java -Djava.library.path=/app/lib/native \
       -cp "/app/CICFlowMeter-fat.jar:/app/lib/jnetpcap.jar" \
       cic.cs.unb.ca.ifm.Cmd \

@@ -6,6 +6,14 @@
 docker compose --env-file <path> --profile <dev> up
 ```
 
+# ATENÇÃO:
+
+Precisamos cruzar as informações de classificação do Óraculo e do Suricata com os dados do dataset original. Cada linha do dataset
+precisa ser identificada de maneira unica, e esse identificador precisa ser repassado para cada um dos ramos (suricata e oraculo), para dai
+podermos, quando chegar ao prometheus, unir os dados de ambos e do dataset original para então construirmos a tabela comparativa
+Isso deve ser feito usando um UUID no pcap-feeder, e propagado por todos os containeres ate o prometheus, que fara o join
+
+
 observar se convem trocar pra podman
 
 ## Visão Geral

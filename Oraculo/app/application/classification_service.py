@@ -27,14 +27,15 @@ class ClassificationService:
             data = json.loads(message)
             ip = data["IP Src"]
             features = data["features"]
+            id = data.get('id')
             X = numpy.array([features], dtype=float)
-            return ip, self.__scaler.transform(X)
+            return ip, id, self.__scaler.transform(X)
         except Exception as e:
             logging.error(f"Classification Service could not pre-process message: {message}, with error:")
             logging.error(e)
             raise e
 
-    def classification(self, input_data: numpy.ndarray) -> list[Tuple[str, float]]:
-        return self.predictor.predict(input_data, strategy=self.__gating_strategy)
+    def classification(self, input_data: numpy.ndarray, id: str|None=None) -> list[Tuple[str, float]]:
+        return self.predictor.predict(input_data, id=id, strategy=self.__gating_strategy)
 
     

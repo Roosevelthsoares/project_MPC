@@ -17,8 +17,8 @@ class MessengerService:
         try:
     
             message: dict[str, Any] = body.decode('utf-8')
-            ip, input_data = self.__classification_service.pre_processing(message)
-            prediction = self.__classification_service.classification(input_data)
+            ip, id, input_data = self.__classification_service.pre_processing(message)
+            prediction = self.__classification_service.classification(input_data, id)
             max_score_label = prediction[0][0]
             max_score_confidence = prediction[0][1]
             if(max_score_label != "Benign"): 

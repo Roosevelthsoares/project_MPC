@@ -13,7 +13,7 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
-      LOGSTASH_URL: ${LOGSTASH_URL:-http://logstash:9600}
+      LOGSTASH_URL: ${LOGSTASH_URL:-http://logstash:5044}
     depends_on:
       cicflowmeter:
         condition: service_healthy
@@ -51,7 +51,7 @@ services:
       DELAY: ${DELAY:-5}
       CONVERT_LINKTYPE: ${CONVERT_LINKTYPE:-1}
     volumes:
-      - pcapstore:/shared
+      - ./pcapstore/cic:/pcaps
       - ./CICFlowMeter/flows:/flows
     healthcheck:
       test: ["CMD", "bash", "-c", "test -d ${FLOWS_DIR:-/flows}"]
@@ -75,7 +75,7 @@ services:
       MIRROR_SURICATA: ${MIRROR_SURICATA:-false}
       MIRROR_ORACULO: ${MIRROR_ORACULO:-true}
     volumes:
-      - pcapstore:/shared    # single volume so hard-links work
+      - ./pcapstore:/shared    # single volume so hard-links work
 
   # ---------- DEV ONLY CONTAINERS ----------
 
@@ -147,21 +147,21 @@ services:
     # --pcap-file-continuous
     # -r /shared/suri/*.pcap
 
-  grafana:
-    image: grafana/grafana:latest
-    profiles: ["dev"]
-    env_file:
-      - .env.${COMPOSE_PROFILE:-dev}
-    environment:
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - elasticsearch
-    # Optional: auto-provision ES datasource by mounting ./grafana/provisioning
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   profiles: ["dev"]
+  #   env_file:
+  #     - .env.${COMPOSE_PROFILE:-dev}
+  #   environment:
+  #     GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+  #     GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   depends_on:
+  #     - elasticsearch
+  #   # Optional: auto-provision ES datasource by mounting ./grafana/provisioning
 
   prometheus:
     image: prom/prometheus:v2.53.0

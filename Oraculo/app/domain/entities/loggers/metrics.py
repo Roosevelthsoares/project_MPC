@@ -85,6 +85,7 @@ class PrometheusPushLogger(MetricLoggingExtension):
 
     def log(
         self,
+        id: str,
         input_data: np.ndarray,
         prediction: List[str],
         latency: float,

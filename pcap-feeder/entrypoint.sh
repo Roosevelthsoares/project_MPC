@@ -7,6 +7,7 @@ CAPTURE="${CAPTURE:-1}"          # set to 0 to disable live capture (replay-only
 
 MIRROR_SURICATA="${MIRROR_SURICATA:-false}"
 MIRROR_ORACULO="${MIRROR_ORACULO:-true}"
+POLL_INTERVAL="${POLL_INTERVAL:-2}"  # seconds between polls
 
 is_true() {
   case "$1" in
@@ -26,19 +27,22 @@ if [ "$CAPTURE" = "1" ]; then
   netsniff-ng -i "$CAP_IF" --interval-flows --output=/shared/incoming --silent &
 fi
 
-# watch for fully-written files, then hard-link to both destinations atomically
-echo "[pcap-feeder] watching /shared/incoming for new pcaps…"
-inotifywait -m -e close_write --format '%w%f' /shared/incoming | while read -r f; do
+dispatch_file() {
+  f="$1"
   base="$(basename "$f")"
   dispatched=0
 
   if is_true "$MIRROR_SURICATA"; then
-    ln "$f" "/shared/suri/$base" 2>/dev/null || { cp "$f" "/shared/suri/$base.part" && mv "/shared/suri/$base.part" "/shared/suri/$base"; }
+    ln "$f" "/shared/suri/$base" 2>/dev/null || {
+      cp "$f" "/shared/suri/$base.part" && mv "/shared/suri/$base.part" "/shared/suri/$base"
+    }
     dispatched=1
   fi
 
   if is_true "$MIRROR_ORACULO"; then
-    ln "$f" "/shared/cic/$base" 2>/dev/null || { cp "$f" "/shared/cic/$base.part" && mv "/shared/cic/$base.part" "/shared/cic/$base"; }
+    ln "$f" "/shared/cic/$base" 2>/dev/null || {
+      cp "$f" "/shared/cic/$base.part" && mv "/shared/cic/$base.part" "/shared/cic/$base"
+    }
     dispatched=1
   fi
 
@@ -48,4 +52,13 @@ inotifywait -m -e close_write --format '%w%f' /shared/incoming | while read -r f
   else
     echo "[pcap-feeder] WARNING: no mirror destinations enabled; leaving $base in /shared/incoming"
   fi
+}
+
+# poll loop
+echo "[pcap-feeder] polling /shared/incoming for new pcaps every $POLL_INTERVAL seconds…"
+while true; do
+  for f in $(ls -1 /shared/incoming/*.pcap 2>/dev/null | sort); do
+    [ -f "$f" ] && dispatch_file "$f"
+  done
+  sleep "$POLL_INTERVAL"
 done
