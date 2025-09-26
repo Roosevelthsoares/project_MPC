@@ -7,6 +7,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+    profiles:
+      - dev
 
   oraculo:
     build: ./Oraculo
@@ -23,6 +25,8 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
+    profiles:
+      - dev
     # mem_limit: 8g
 
   mlflow:
@@ -58,11 +62,12 @@ services:
       interval: 20s
       timeout: 3s
       retries: 15
+    profiles:
+      - dev
 
   pcap-feeder:
     build: ./pcap-feeder
     depends_on:
-      - suricata
       - cicflowmeter
     # host networking only if you want live capture; for offline CICIDS2018 replay set CAPTURE=0
     network_mode: host
@@ -133,17 +138,36 @@ services:
       - dev
 
   suricata:
-    image: jasonish/suricata:latest
+    build: ./suricata
+    container_name: project_mpc-suricata-1
     depends_on: [logstash]
     volumes:
-      - pcapstore:/shared
+      - ./pcaps:/shared/suri
       - ${SURICATA_CONFIG_PATH:-./suricata/suricata.yaml}:/etc/suricata/suricata.yaml:ro
+      - ./suricata/suricata-metrics.yaml:/suricata-metrics.yaml:ro
       - ./suricata/logs:/var/log/suricata
-      - ./suricata/rules:/etc/suricata/rules     # <--- persistência das regras
-      - ./suricata/suricata-wrapper.sh:/usr/local/bin/suricata-wrapper.sh:ro
-    command: ["/usr/local/bin/suricata-wrapper.sh"]
+      - ./suricata/rules:/etc/suricata/rules
     ports:
-      - "9100:9100"
+      - "9101:9101"
+    healthcheck:
+      test: ["CMD-SHELL", "test -s /var/log/suricata/eve.json"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    profiles:
+      - dev
+
+  flow-aggregator:
+    image: python:3.11-slim
+    container_name: project_mpc-flow-aggregator
+    depends_on:
+      - suricata
+    volumes:
+      - ./suricata/logs:/var/log/suricata
+      - ./suricata/flow_aggregator.py:/flow_aggregator.py
+    working_dir: /var/log/suricata
+    command: ["python3", "/flow_aggregator.py"]
     profiles:
       - dev
 
@@ -185,6 +209,7 @@ services:
     volumes:
       - ./suricata/logs:/var/log/suricata:ro
       - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./telegraf/scripts:/etc/telegraf/scripts:ro
     ports:
       - "9273:9273"
     profiles:

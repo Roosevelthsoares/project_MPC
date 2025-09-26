@@ -2,33 +2,41 @@
 ---
 stats:
   enabled: yes
-  interval: 10 
+  interval: 10
 
-# Output only what you need; EVE JSON to a single file
+# Define uma interface prometheus separada para métricas
+# The default logging directory
+default-log-dir: /var/log/suricata
+
 outputs:
   - eve-log:
       enabled: yes
       filetype: regular
-      filename: /var/log/suricata/eve.json
-      # For high-speed parsing, let threads write to their own files:
-      # thread: true   # (creates eve.<id>.json files)
+      filename: eve.json
       types:
-        - flow        # flow summaries
-        - alert       # signature hits (if you enable detection/rules)
-        - stats       # optional, handy for performance
-  
+        - flow
+        - alert
+        - stats
+        - http
+        - dns
+        - tls
+        - ssh
+
+  - fast:
+      enabled: yes
+      filename: fast.log
+
   - stats:
       enabled: yes
+      filename: stats.log
       interval: 10
-      filename: /var/log/suricata/stats.log
-      append: yes
 
-  # Warning: runmodes: No output module named prometheus
-          # Isso significa que o binário do Suricata dentro do container jasonish/suricata:latest não foi compilado com suporte ao módulo prometheus.
-  # - prometheus:
-  #     enabled: yes
-  #     listen-address: 0.0.0.0
-  #     port: 9100
+  - metrics:
+      enabled: yes
+      prometheus:
+        enabled: yes
+        listen: 0.0.0.0:9101
+        mode: listen
 
 # Definição das variáveis usadas pelas regras
 vars:

@@ -1,0 +1,1 @@
+{"timestamp":"2025-09-26T16:20:00.000000+0000","event_type":"stats","stats":{"uptime":9999,"flow":{"total":12345,"active":7,"tcp":12000,"memuse":54321},"tcp":{"invalid_checksum":3,"memuse":123456,"reassembly_memuse":8192},"detect":{"alert":5,"engines":[{"rules_loaded":45157,"rules_failed":0}]}}}
