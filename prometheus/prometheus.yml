@@ -1,5 +1,6 @@
 global:
   scrape_interval: 5s
+  evaluation_interval: 30s
 
 scrape_configs:
   # Pull from Pushgateway (the easiest 'push' pattern)
@@ -11,7 +12,7 @@ scrape_configs:
     static_configs:
       - targets: ["telegraf:9273"]
 
-  # - job_name: "suricata"
-  #   static_configs:
-  #     - targets: ["suricata:9100"]
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8439"]
 

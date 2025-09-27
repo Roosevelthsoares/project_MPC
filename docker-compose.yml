@@ -142,7 +142,7 @@ services:
     container_name: project_mpc-suricata-1
     depends_on: [logstash]
     volumes:
-      - ./pcaps:/shared/suri
+      - ./pcapstore/suri:/shared/suri
       - ${SURICATA_CONFIG_PATH:-./suricata/suricata.yaml}:/etc/suricata/suricata.yaml:ro
       - ./suricata/suricata-metrics.yaml:/suricata-metrics.yaml:ro
       - ./suricata/logs:/var/log/suricata
@@ -217,6 +217,24 @@ services:
     depends_on:
       - suricata
 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8439:8439"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    privileged: true
+    profiles:
+      - dev
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8439/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   pcapstore:
