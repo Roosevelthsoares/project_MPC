@@ -7,8 +7,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
-    profiles:
-      - dev
 
   oraculo:
     build: ./Oraculo
@@ -25,8 +23,6 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
-    profiles:
-      - dev
     # mem_limit: 8g
 
   mlflow:
@@ -48,7 +44,7 @@ services:
 
   cicflowmeter:
     build: ./CICFlowMeter
-    depends_on: [rabbitmq]
+    # depends_on: [rabbitmq]
     environment:
       PCAPS_DIR: ${PCAPS_DIR:-/shared/cic}
       FLOWS_DIR: ${FLOWS_DIR:-/flows}
@@ -62,8 +58,6 @@ services:
       interval: 20s
       timeout: 3s
       retries: 15
-    profiles:
-      - dev
 
   pcap-feeder:
     build: ./pcap-feeder
