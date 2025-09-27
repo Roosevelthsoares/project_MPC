@@ -86,8 +86,8 @@ class PrometheusPushLogger(MetricLoggingExtension):
     def log(
         self,
         id: str,
-        input_data: np.ndarray,
-        prediction: List[str],
+        # input_data: np.ndarray,
+        # prediction: List[str],
         latency: float,
         ids_version: str = "Oraculo",
         variant: str | None = None,
@@ -114,25 +114,25 @@ class PrometheusPushLogger(MetricLoggingExtension):
             base_labels["experiment"] = self._experiment_name
         base_labels.update(self.static_labels)
 
-        # Convert input_data (ndarray) into numeric metrics
-        input_numeric: Dict[str, float] = {}
-        if input_data is not None:
-            arr = np.array(input_data).flatten()
-            for i, val in enumerate(arr):
-                input_numeric[f"{i}"] = float(val)
+        # # Convert input_data (ndarray) into numeric metrics
+        # input_numeric: Dict[str, float] = {}
+        # if input_data is not None:
+        #     arr = np.array(input_data).flatten()
+        #     for i, val in enumerate(arr):
+        #         input_numeric[f"{i}"] = float(val)
 
-        # Convert prediction (list[str]) into labels
-        prediction_labels: Dict[str, str] = {}
-        if prediction:
-            for i, val in enumerate(prediction):
-                prediction_labels[f"prediction_{i}"] = str(val)
+        # # Convert prediction (list[str]) into labels
+        # prediction_labels: Dict[str, str] = {}
+        # if prediction:
+        #     for i, val in enumerate(prediction):
+        #         prediction_labels[f"prediction_{i}"] = str(val)
 
         # Build Prometheus exposition text format
         lines: list[str] = []
 
         def add_metric(name: str, value: float, extra_labels: Optional[Dict[str, str]] = None):
             mname = self._sanitize_metric_name(name)
-            all_labels = {**base_labels, **prediction_labels}
+            all_labels = {**base_labels}#, **prediction_labels}
             if extra_labels:
                 all_labels.update(extra_labels)
             label_s = ",".join(f'{k}="{self._escape_label(v)}"' for k, v in sorted(all_labels.items()))
@@ -149,8 +149,8 @@ class PrometheusPushLogger(MetricLoggingExtension):
             add_metric("wait_time_microsecond", float(wait_time) * 1000.0)
 
         # Numeric input metrics
-        for k, v in input_numeric.items():
-            add_metric(f"input_{k}", v)
+        # for k, v in input_numeric.items():
+        #     add_metric(f"input_{k}", v)
 
         # Extra metrics
         if metrics:

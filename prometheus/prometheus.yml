@@ -3,7 +3,6 @@ global:
   evaluation_interval: 30s
 
 scrape_configs:
-  # Pull from Pushgateway (the easiest 'push' pattern)
   - job_name: "pushgateway"
     static_configs:
       - targets: ["pushgateway:9091"]

@@ -188,7 +188,7 @@ class Predictor:
         with Timer() as timer:
             preds = self.predictor.predict(X_input, strategy, threshold, batch_size, **kwargs)
         
-        self._logger.log(input_data=X_input, latency=timer.elapsed_time,
-                         variant=strategy, prediction=preds, metrics={'threshold': threshold, 'batch_size': batch_size}, id=id)
+        self._logger.log(latency=timer.elapsed_time,
+                         variant=strategy, metrics={'threshold': threshold, 'batch_size': batch_size})
         return preds
 
