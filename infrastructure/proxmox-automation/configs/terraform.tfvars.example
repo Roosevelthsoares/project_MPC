@@ -1,0 +1,76 @@
+# Configurações Terraform validadas para Proxmox
+# Desenvolvido para o projeto MPC 1.0
+# Data: 28 de setembro de 2025
+
+# Configurações do Proxmox  
+pm_api_url          = "https://192.168.90.10:8006/api2/json"
+pm_user             = "terraform@pve"
+pm_api_token_id     = "tofu-token"
+pm_api_token_secret = "7844a301-01ff-431d-ad1f-8afbbc0d315c"
+pm_tls_insecure     = true
+
+# Configurações da VM principal (VM 732)
+vm_name        = "pve732-mpc"
+vm_desc        = "Proxmox VE 8.4 para projeto MPC 1.0"
+vm_tags        = "mpc,production,proxmox"
+vm_cpu_cores   = 8
+vm_cpu_sockets = 1
+vm_memory      = 30720  # 30GB RAM
+vm_vmid        = 732
+
+# Configurações de rede
+vm_network_bridge = "vmbr0"
+vm_network_model  = "virtio"
+
+# Configurações de storage  
+vm_storage_pool = "data02"
+vm_disk_size    = "228G"    # Disco principal
+vm_disk_format  = "raw"
+vm_disk_cache   = "writethrough"
+
+# Storage adicional
+vm_additional_disk_size   = "200G"   # Disco adicional 
+vm_additional_disk_format = "raw"
+
+# Configurações do sistema
+vm_os_type = "l26"  # Linux 2.6+
+vm_agent   = 1      # QEMU Agent habilitado
+
+# Configurações de boot
+vm_boot_order = "c"
+vm_bios      = "seabios"
+
+# Senha root para VMs (use variável de ambiente em produção)
+vm_root_password = "MpC2025!"
+
+# Timezone
+vm_timezone = "America/Sao_Paulo"
+
+# Configurações de rede das VMs aninhadas
+nested_vm_network_bridges = [
+  "vmbr0",
+  "vmbr6001", 
+  "vmbr6003",
+  "vmbr6004",
+  "vmbr1",
+  "vmbr5001",
+  "vmbr5002"
+]
+
+# Configurações das VMs aninhadas
+# VM 701 - pfSense Firewall
+pfsense_vmid   = 701
+pfsense_name   = "pfsense-fw"
+pfsense_memory = 4096   # 4GB RAM
+pfsense_cores  = 2
+pfsense_disk   = "32G"
+
+# VM 702 - Security Onion IDS
+security_onion_vmid   = 702  
+security_onion_name   = "security-onion-ids"
+security_onion_memory = 24576  # 24GB RAM
+security_onion_cores  = 8
+security_onion_disk   = "700G"
+
+# NOTA: Esta configuração foi testada e validada em 28/09/2025
+# Status: FUNCIONANDO 100% ✅
