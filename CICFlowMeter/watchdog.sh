@@ -23,13 +23,13 @@ while true; do
     echo "[DEBUG] Checking file: $file"
     ls -lh "$file"
 
-    if [ "$CONVERT" = "1" ]; then
-      converted="/tmp/${base}_ether.pcap"
-      editcap -T ether "$file" "$converted"
-      pcap_to_use="$converted"
-    else
-      pcap_to_use="$file"
-    fi
+    # if [ "$CONVERT" = "1" ]; then
+    #   converted="/tmp/${base}_ether.pcap"
+    #   editcap -T ether "$file" "$converted"
+    #   pcap_to_use="$converted"
+    # else
+    pcap_to_use="$file"
+    # fi
 
     java -Djava.library.path=/app/lib/native \
       -cp "/app/CICFlowMeter-fat.jar:/app/lib/jnetpcap.jar" \
@@ -40,11 +40,11 @@ while true; do
 
 
     if [ $? -eq 0 ]; then
-      if [ "$CONVERT" = "1" ]; then
-        csv_file="$OUTPUT_DIR/${base}_ether.pcap_Flow.csv"
-      else
-        csv_file="$OUTPUT_DIR/${base}.pcap_Flow.csv"
-      fi
+      # if [ "$CONVERT" = "1" ]; then
+      #   csv_file="$OUTPUT_DIR/${base}_ether.pcap_Flow.csv"
+      # else
+      csv_file="$OUTPUT_DIR/${base}.pcap_Flow.csv"
+      # fi
 
       echo "[INFO] Processed $filename, invoking producer on $csv_file..."
       # python3 /app/producer/producer.py "$csv_file" 2>&1

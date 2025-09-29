@@ -2,6 +2,7 @@ import logging
 import threading
 import signal
 import sys
+import time
 
 from infrastructure.rest.app import WebServer
 from infrastructure.database.logstash_producer import db 
@@ -14,6 +15,8 @@ from application.package_service import PackageService
 from application.classification_service import ClassificationService
 from config import URL_FIREWALL, FIREWALL_CLIENT_ID, FIREWALL_TOKEN_ID
 from domain.entities.loggers.terminal import apply_colored_formatter
+# from socket import ConnectionResetError
+
 
 
 def start_flask_app():
@@ -43,6 +46,13 @@ def initialize_services():
 def main():
     messenger_service = initialize_services()
     messenger_service.consume_message('model-queue')
+
+def _main():
+    flask_app, flask_thread = start_flask_app()
+
+    signal.signal(signal.SIGINT, stop_application)
+
+    main()
     
 if __name__ == '__main__':
     # try:
@@ -60,11 +70,12 @@ if __name__ == '__main__':
     #     logging.error(str(e))
     #     stop_application()
         
-
-    flask_app, flask_thread = start_flask_app()
-
-    signal.signal(signal.SIGINT, stop_application)
-
-    main()
-
-    stop_application()
+    try:
+        _main()
+    except ConnectionResetError as e:
+        logging.error(f"[ERROR] Connection reset: {e}")
+        time.sleep(5)
+        _main()
+    except Exception as e:
+        logging.error(f"[ERROR] Unhandled exception: {e}")
+        stop_application()

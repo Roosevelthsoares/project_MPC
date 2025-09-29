@@ -4,23 +4,15 @@ stats:
   enabled: yes
   interval: 10
 
-# Define uma interface prometheus separada para métricas
-# The default logging directory
 default-log-dir: /var/log/suricata
 
 outputs:
   - eve-log:
       enabled: yes
       filetype: regular
-      filename: eve.json
+      filename: /var/log/suricata/eve.json
       types:
-        - flow
         - alert
-        - stats
-        - http
-        - dns
-        - tls
-        - ssh
 
   - fast:
       enabled: yes
@@ -31,12 +23,6 @@ outputs:
       filename: stats.log
       interval: 10
 
-  - metrics:
-      enabled: yes
-      prometheus:
-        enabled: yes
-        listen: 0.0.0.0:9101
-        mode: listen
 
 # Definição das variáveis usadas pelas regras
 vars:
@@ -61,16 +47,8 @@ app-layer:
     modbus:
       enabled: yes
       detection-enabled: yes
-    # dnp3:
-    #   enabled: yes
-    #   detection-enabled: yes
 
 
-# Se você quiser apenas fluxo sem detecção, pode desabilitar
-# detection:
-#   enabled: no
-
-# Regras
 default-rule-path: /var/lib/suricata/rules
 rule-files:
   - suricata.rules

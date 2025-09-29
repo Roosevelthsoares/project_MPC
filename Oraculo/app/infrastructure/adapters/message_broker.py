@@ -52,6 +52,7 @@ class MessageBroker(Messenger):
             self.__channel.queue_declare(queue=queue_name, durable=True) 
             self.__channel.basic_publish(exchange='', routing_key=queue_name, body=message)
             logging.debug(f"Sent '{message[:100]}...'")
+            self.__retry_delay = 5  # Reset retry delay on success
 
         except pika.exceptions.AMQPError as e:
             logging.error(f"Error publishing message: {str(e)}")
@@ -60,22 +61,26 @@ class MessageBroker(Messenger):
             self.close_connection()
         
     def receive_message(self, queue_name, callback):
-        try:
-            self.connect()
-            self.__channel.queue_declare(queue=queue_name, durable=True)
-            self.__channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-            logging.info('Waiting for messages. To exit press CTRL+C')
-            self.__channel.start_consuming()
+        while True:
+            try:
+                self.connect()
+                self.__channel.queue_declare(queue=queue_name, durable=True)
+                self.__channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+                logging.info('Waiting for messages. To exit press CTRL+C')
+                self.__channel.start_consuming()
 
-        except KeyboardInterrupt:
-            if self.__channel:
-                self.__channel.stop_consuming()
-            
-        except pika.exceptions.AMQPError as e:
-            logging.error(f"Error receiving message: {str(e)}")
+            except KeyboardInterrupt:
+                if self.__channel:
+                    self.__channel.stop_consuming()
+                break
 
-        finally:
-            self.close_connection()
+            except (pika.exceptions.AMQPError, pika.exceptions.AMQPConnectionError, pika.exceptions.StreamLostError) as e:
+                logging.error(f"Error receiving message: {str(e)}")
+                time.sleep(self.__retry_delay)
+                continue
+
+            finally:
+                self.close_connection()
 
     def close_connection(self):
         if self.__connection and self.__connection.is_open:

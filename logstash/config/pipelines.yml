@@ -1,0 +1,5 @@
+- pipeline.id: oraculo
+  path.config: "/usr/share/logstash/pipeline/oraculo.conf"
+
+- pipeline.id: suricata
+  path.config: "/usr/share/logstash/pipeline/suricata.conf"

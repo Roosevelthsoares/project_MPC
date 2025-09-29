@@ -54,7 +54,7 @@ def process_csv_file(filepath, broker):
                     "IP Src":   ip_src,
                     "Port Src": port_src,
                     "IP Dst":   ip_dst,
-                    "id":       str(os.path.basename(filepath)).split('.')[0],
+                    "id":       row[IDX_FLOW_ID],
                     "features": features
                 }
 
@@ -62,7 +62,14 @@ def process_csv_file(filepath, broker):
                 broker.publish_message(message)
 
             except Exception as e:
-                print(f"[ERROR] Linha ignorada por erro: {e}")        
+                print(f"[ERROR] Linha ignorada por erro: {e}")  
+
+    # delete file after processing
+    try:
+        os.remove(filepath)
+        print(f"[INFO] Arquivo {filepath} removido após processamento.")
+    except OSError as e:
+        print(f"[ERROR] Erro ao remover arquivo {filepath}: {e}")
 
 if __name__ == '__main__':
     import sys

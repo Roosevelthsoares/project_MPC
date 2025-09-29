@@ -23,7 +23,7 @@ class MessengerService:
             max_score_confidence = prediction[0][1]
             if(max_score_label != "Benign"): 
                 # self.__firewall_service.block_source_ip(ip)
-                self.__package_service.create_package(ip, max_score_label, max_score_confidence)
+                self.__package_service.create_package(ip, id, max_score_label, max_score_confidence)
 
         except Exception as e:
             logging.error(f"Error processing message: {str(e)}")

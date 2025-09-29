@@ -85,7 +85,7 @@ class PrometheusPushLogger(MetricLoggingExtension):
 
     def log(
         self,
-        id: str,
+        # id: str,
         # input_data: np.ndarray,
         # prediction: List[str],
         latency: float,
@@ -144,9 +144,9 @@ class PrometheusPushLogger(MetricLoggingExtension):
                 lines.append(f"{mname} {self._fmt_float(value)}")
 
         # Core metrics
-        add_metric("latency_microsecond", float(latency) * 1000.0)
+        add_metric("latency_nanosecond", float(latency) * 1000.0)
         if wait_time is not None:
-            add_metric("wait_time_microsecond", float(wait_time) * 1000.0)
+            add_metric("wait_time_nanosecond", float(wait_time) * 1000.0)
 
         # Numeric input metrics
         # for k, v in input_numeric.items():

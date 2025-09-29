@@ -7,6 +7,15 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-guest}
+      # RABBITMQ_VM_MEMORY_HIGH_WATERMARK: 0.7
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    mem_limit: 6g
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "status"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
 
   oraculo:
     build: ./Oraculo
@@ -20,6 +29,8 @@ services:
       elasticsearch:
         condition: service_healthy
       logstash:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     ports:
       - "8000:8000"
@@ -44,7 +55,7 @@ services:
 
   cicflowmeter:
     build: ./CICFlowMeter
-    # depends_on: [rabbitmq]
+    depends_on: [rabbitmq]
     environment:
       PCAPS_DIR: ${PCAPS_DIR:-/shared/cic}
       FLOWS_DIR: ${FLOWS_DIR:-/flows}
@@ -104,6 +115,8 @@ services:
     depends_on:
       - elasticsearch
     volumes:
+      - ./logstash/config/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./suricata/logs:/var/log/suricata
       - ${LOGSTASH_CONFIG_PATH:-./logstash/pipeline}:/usr/share/logstash/pipeline:rw
     ports:
       - "5044:5044"
@@ -163,7 +176,7 @@ services:
     working_dir: /var/log/suricata
     command: ["python3", "/flow_aggregator.py"]
     profiles:
-      - dev
+      - devs
 
 
   # grafana:
