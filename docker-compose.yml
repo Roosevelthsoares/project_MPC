@@ -16,6 +16,9 @@ services:
       interval: 20s
       timeout: 10s
       retries: 10
+    profiles:
+      - prod
+      - dev
 
   oraculo:
     build: ./Oraculo
@@ -34,7 +37,9 @@ services:
         condition: service_healthy
     ports:
       - "8000:8000"
-    # mem_limit: 8g
+    profiles:
+      - prod
+      - dev
 
   mlflow:
     build: ./mlflow
@@ -52,6 +57,9 @@ services:
       --port 5000
       --backend-store-uri ${MLFLOW_BACKEND_URI}
       --artifacts-destination ${MLFLOW_ARTIFACT_ROOT}
+    profiles:
+      - prod
+      - dev
 
   cicflowmeter:
     build: ./CICFlowMeter
@@ -69,6 +77,9 @@ services:
       interval: 20s
       timeout: 3s
       retries: 15
+    profiles:
+      - prod
+      - dev
 
   pcap-feeder:
     build: ./pcap-feeder
@@ -86,6 +97,9 @@ services:
       MIRROR_ORACULO: ${MIRROR_ORACULO:-true}
     volumes:
       - ./pcapstore:/shared    # single volume so hard-links work
+    profiles:
+      - prod
+      - dev
 
   # ---------- DEV ONLY CONTAINERS ----------
 
@@ -103,6 +117,7 @@ services:
       - esdata_new_comparative:/usr/share/elasticsearch/data
     profiles:
       - dev
+      - suri
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:9200"]
       interval: 10s
@@ -125,6 +140,7 @@ services:
       - LS_JAVA_OPTS=-Xms${LOGSTASH_MEMORY_LIMIT:-512m} -Xmx${LOGSTASH_MEMORY_LIMIT:-512m}
     profiles:
       - dev
+      - suri
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:9600/_node/pipelines"]
       interval: 10s
@@ -143,6 +159,7 @@ services:
       - elasticsearch
     profiles:
       - dev
+      - suri
 
   suricata:
     build: ./suricata
@@ -154,6 +171,7 @@ services:
       - ./suricata/suricata-metrics.yaml:/suricata-metrics.yaml:ro
       - ./suricata/logs:/var/log/suricata
       - ./suricata/rules:/etc/suricata/rules
+      - ./suricata/disable.conf:/etc/suricata/disable.conf
     ports:
       - "9101:9101"
     healthcheck:
@@ -164,24 +182,26 @@ services:
       start_period: 30s
     profiles:
       - dev
+      - suri
 
-  flow-aggregator:
-    image: python:3.11-slim
-    container_name: project_mpc-flow-aggregator
-    depends_on:
-      - suricata
-    volumes:
-      - ./suricata/logs:/var/log/suricata
-      - ./suricata/flow_aggregator.py:/flow_aggregator.py
-    working_dir: /var/log/suricata
-    command: ["python3", "/flow_aggregator.py"]
-    profiles:
-      - devs
+  # flow-aggregator:
+  #   image: python:3.11-slim
+  #   container_name: project_mpc-flow-aggregator
+  #   depends_on:
+  #     - suricata
+  #   volumes:
+  #     - ./suricata/logs:/var/log/suricata
+  #     - ./suricata/flow_aggregator.py:/flow_aggregator.py
+  #   working_dir: /var/log/suricata
+  #   command: ["python3", "/flow_aggregator.py"]
+  #   profiles:
+  #     - devs
 
 
   # grafana:
   #   image: grafana/grafana:latest
-  #   profiles: ["dev"]
+  #   profiles: 
+  #     - dev
   #   env_file:
   #     - .env.${COMPOSE_PROFILE:-dev}
   #   environment:

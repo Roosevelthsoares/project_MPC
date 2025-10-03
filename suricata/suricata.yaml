@@ -24,26 +24,46 @@ outputs:
       interval: 10
 
 
-# Definição das variáveis usadas pelas regras
 vars:
   address-groups:
-    HOME_NET: "[192.168.0.0/16,10.0.0.0/8,172.16.0.0/12]"
-    EXTERNAL_NET: "!$HOME_NET"
+    HOME_NET: "any"
+    EXTERNAL_NET: "any"
     HTTP_SERVERS: "$HOME_NET"
     SQL_SERVERS: "$HOME_NET"
     TELNET_SERVERS: "$HOME_NET"
-    SMTP_SERVERS: "$HOME_NET"
-    DNS_SERVERS: "$HOME_NET"
+    SMTP_SERVERS: "[192.168.0.25,10.0.0.25]"
+    DNS_SERVERS: "[192.168.0.53,10.0.0.53]"
 
   port-groups:
     HTTP_PORTS: "80,8080,8000,3128,443"
     SHELLCODE_PORTS: "!80"
     ORACLE_PORTS: "1521"
     SSH_PORTS: "22"
+    FILE_DATA_PORTS: "80,110,143,25,21,23,443"
+    FTP_PORTS: "21"
+    SIP_PORTS: "5060,5061,5600"
+    TELNET_PORTS: "23"
+    SMTP_PORTS: "25,465,587"
+    DNS_PORTS: "53"
 
 
 app-layer:
   protocols:
+    http:
+      enabled: yes
+      libhtp:
+        default-config:
+          personality: IDS
+    tls:
+      enabled: yes
+    dns:
+      enabled: yes
+    ftp:
+      enabled: yes
+    smtp:
+      enabled: yes
+    ssh:
+      enabled: yes
     modbus:
       enabled: yes
       detection-enabled: yes
