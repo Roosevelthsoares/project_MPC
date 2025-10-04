@@ -1,0 +1,14 @@
+all:
+  children:
+    proxmox_hosts:
+      hosts:
+        pve732:
+          ansible_host: 192.168.100.2
+          ansible_user: root
+          ansible_password: MpC2025!
+          ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+      vars:
+        proxmox_api_host: 192.168.100.2
+        proxmox_api_user: root@pam
+        proxmox_api_password: MpC2025!
+        proxmox_node: pve732

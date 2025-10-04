@@ -1,0 +1,27 @@
+[global]
+keyboard = "en-us"
+country = "us"
+fqdn = "pve732.local"
+mailto = "admin@local.domain"
+timezone = "America/Sao_Paulo"
+root-password = "MpC2025!"
+
+[network]
+source = "from-answer"
+cidr = "192.168.100.2/24"
+dns = "192.168.100.1"
+gateway = "192.168.100.1"
+# Usar qualquer interface de rede disponível (primeira encontrada)
+filter.ID_NET_NAME = "en*"
+
+[disk-setup]
+filesystem = "ext4"
+disk-list = ["sda"]
+lvm.hdsize = 228
+lvm.swapsize = 4
+lvm.maxroot = 50
+lvm.maxvz = 200
+
+[first-boot]
+source = "from-iso"
+ordering = "fully-up"
